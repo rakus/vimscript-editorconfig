@@ -1,0 +1,6 @@
+[submodule "tests/editorconfig-core-test"]
+	path = tests/editorconfig-core-test
+	url = https://github.com/editorconfig/editorconfig-core-test.git
+[submodule "tests/editorconfig-plugin-tests"]
+	path = tests/editorconfig-plugin-tests
+	url = https://github.com/editorconfig/editorconfig-plugin-tests.git

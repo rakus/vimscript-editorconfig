@@ -1,0 +1,27 @@
+
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+tab_width = 8
+
+[*.vim]
+indent_size = 2
+
+[*.yml]
+indent_size = 2
+
+[*.sh]
+indent_size = 4
+
+[doc/*.txt]
+spell_lang = en
+spell_check = true
+
+[*.md]
+spell_lang = en
+spell_check = true
+

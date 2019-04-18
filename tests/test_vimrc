@@ -1,0 +1,12 @@
+"
+" minimal vimrc for testing
+"
+
+filetype plugin indent on
+
+execute "set rtp+=" . fnamemodify(expand("<sfile>:p"), ":p:h:h")
+
+if exists("$LOG_DIR")
+  set directory=$LOG_DIR
+endif
+

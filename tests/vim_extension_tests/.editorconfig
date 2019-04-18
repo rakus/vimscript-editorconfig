@@ -1,0 +1,23 @@
+root=true
+
+[de_de.txt]
+spell_lang = de_de
+spell_check = true
+
+[ignore_by_name.txt]
+tab_width=11
+
+[*.xyz]
+tab_width=12
+
+[ignore_by_filetype.c]
+tab_width=13
+
+[*.md]
+tab_width=14
+
+[.vimrc]
+tab_width=15
+
+[escape_test.txt]
+string=f:\not-there\also-not-there,.

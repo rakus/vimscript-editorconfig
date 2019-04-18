@@ -1,0 +1,390 @@
+*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 Apr 10
+
+                  EDITOR CONFIG FOR VIM   by Ralf Schandl
+
+Plugin to add editorconfig support to Vim.                      *editorconfig*
+
+
+1. Introduction                              |editorconfig-intro|
+2. Supported Properties                      |editorconfig-cmd|
+3. Commands                                  |editorconfig-cmd|
+4. Customization                             |editorconfig-customization|
+5. Extending Editorconfig                    |editorconfig-extending|
+6. Integrating with the Editorconfig Plugin  |editorconfig-integrating|
+
+==============================================================================
+1. Introduction                                           *editorconfig-intro*
+
+Editorconfig provides a simple way to configure some basic settings. It is in
+no way comparable with what you can do with your vimrc, but it helps to bring
+some consistency into a code base handled by different programmers with
+different editors.
+
+You can read more about editorconfig on http://editorconfig.org and in the
+wiki at https://github.com/editorconfig/editorconfig/wiki.
+
+1.1 How does it work?
+---------------------
+
+A file named `.editorconfig` is created in the root directory of a source
+project. Whenever Vim opens a file in or below that directory, the file
+`.editorconfig` is parsed and the appropriate settings are applied for the
+file to edit. Typical settings are `tabstop` or `shiftwidth`.
+
+The editorconfig file is a simple init file with sections named by glob
+pattern and settings. Like:
+>
+    root = true
+
+    [*]
+    charset = utf-8
+    insert_final_newline = true
+    trim_trailing_whitespace = true
+
+    [*.js]
+    indent_style = space
+    indent_size = 4
+
+    [*.{yml,yaml}]
+    indent_style = space
+    indent_size = 2
+<
+
+The `root = true` defines this file as the top-level editorconfig file. If
+this setting would not be there, parent directories would be searched for
+further files named `.editorconfig`.
+
+The rest of the file is pretty self explanatory. It is read from top to bottom
+and the properties from matching sections are applied. A property from a later
+section will override those from an earlier section. E.g. all files use UTF-8
+encoding. For Javascript the indent (shiftwidth) is 4, for yaml files 2.
+
+Comments
+--------
+Comment characters in editorconfig files are `#` and `;`. They define the rest
+of the line as comment.
+It is highly recommended to put comments on their own line.
+The behavior of end-of-lines comments and the escaping of comments characters
+is not clearly defined. So you should avoid them.
+>
+    [*]
+    prop1 = value  # this is a comment
+    prop2 = value#   this is NOT a comment
+    prop3 = value \# this is NOT a comment, but \ is also returned
+<
+
+1.2 Editorconfig vs. Modeline
+-----------------------------
+
+If the file has a |modeline|, this settings take precedence over the
+editorconfig settings.
+
+
+==============================================================================
+2. Supported Properties                                   *editorconfig-props*
+
+Note, that all properties support the special value `unset`. This makes it a
+'no-op', even when it was set in a parent `.editorconfig` or a parent section
+like `[*]`.
+
+If a property has a invalid value, that property is silently ignored. Use the
+command |:EditorConfig| `status` to display warning messages.
+
+`indent_style`            Value: `tab`, `space`
+                        Defines whether tabs or spaces should be used for
+                        indenting.
+                        In Vim it switches the option |expandtab|.
+
+`indent_size`             Value: `tab` or a positive number
+                        Sets the |'shiftwidth'|. If the value is `tab`, the
+                        |'shiftwidth'| is set to `0`, then the value of
+                        |'tabstop'| is used.
+
+`tab_width`               Value: a positive number
+                        Sets the option |'tabstop'|.
+
+`end_of_line`             Value: `lf`, `cr` or `crlf`.
+                        Sets the |'fileformat'|.
+                        `lf`:   fileformat = unix
+                        `cr`:   fileformat = mac
+                        `crlf`: fileformat = dos
+
+`trim_trailing_whitespace`
+                        Value: `true` or `false`
+                        If true, installs a buffer-local `autocmd` to remove
+                        trailing spaces before writing the buffer.
+
+`insert_final_newline`    Value: `true` or `false`
+                        Toggles the option |'fixendofline'|.
+
+`charset`                 Value: any charset supported by Vim (see
+                        |encoding-values|)
+                        Sets the |'fileencoding'| for the buffers of new files.
+                        For existing files, the file is reloaded with the
+                        given encoding, if Vim detected a different encoding.
+                        If the charset is `utf-8-bom` the option |'bomb'| is
+                        set.
+                        Editorconfig only requires support for a limited set
+                        of encodings:
+                          - latin1
+                          - utf-8
+                          - utf-16be
+                          - utf-16le
+                          - utf-8-bom
+                        Note that "utf-16be" is not listed as a
+                        |encoding-values| in Vim help, but work (at least on
+                        Linux).
+
+`max_line_length`         Value: `off` or a positive number
+                        Sets the option |'textwidth'|.
+                        If the value is `off`, |'textwidth'|is untouched
+                        (whatever it was set before)`.
+
+
+Vim extensions
+--------------
+The following properties are only supported by the Vim editorconfig plugin.
+
+WARNING: This plugin is in a early stage, the name of the following properties
+might change!
+
+`spell_lang`              Value: "comma separated list of word list names"
+                        Sets the option |'spelllang'|, but does not enable
+                        spell checking.
+                        Note that this might trigger a download of the spell
+                        file if the |spellfile.vim| plugin is active.
+
+`spell_check`             Value: `true` or `false`
+                        Whether spellcheck is wanted. Sets the option
+                        |'spell'| or |'nospell'|.
+
+
+==============================================================================
+3. Commands                                   *editorconfig-cmd* *:EditorConfig*
+
+                                                          *EditorConfig-apply*
+:EditorConfig[!] apply  (Re)Applies editorconfig settings to the current file.
+                        If `!` is given, ignores |g:editor_config_blacklist|
+                        and applies the settings to files that normally would
+                        be ignored.
+
+                                                         *EditorConfig-status*
+:EditorConfig status    This command prints information about the editorconfig
+                        applied to the current file. It prints applied
+                        settings, warning and error messages.
+                        Example output:
+>
+                        EditorConfig Info:
+                        - setlocal fixendofline
+                        - Set fileencoding to utf-8
+                        - setlocal fileformat=dos
+                        - setlocal noexpandtab
+                        - let &l:shiftwidth = 4
+                        - Installed autocmd TrimTrailingWhiteSpace
+                        EditorConfig Warnings:
+                        - /dir/.editorconfig Section [*.{c,h}]: Unsupported option: unsupported = x
+<
+
+==============================================================================
+4. Customization                                  *editorconfig-customization*
+
+`g:editor_config_blacklist`
+                        Prevent applying editorconfig by filetypes or
+                        filenames.
+>
+                        let g:editor_config_blacklist = {
+                           'filetype': [ 'git*',  ],
+                           'filename': [ '*.tmp', '*.xy' ]
+                        }
+<
+                        Note: This case-insensitive.
+
+                        Normally you need a leading `*` to ignore a file.
+                        If you want to ignore the file `testcase.txt` you
+                        have to give the filename as `*/testcase.txt`.
+                        If you want to ignore remote files you add the
+                        filename `scp:*` (or whatever protocol you use).
+
+`g:editor_config_picky`   If this variable is set, the editorconfig plugin
+                        will also print a message if a warning occurred during
+                        processing (like a unknown option). By default a
+                        message is only printed on error (like can't parse
+                        file, invalid property value).
+
+`g:editor_config_quiet`   If this variable is set, does not print a message
+                        if a error or warning occurred during processing.
+
+`g:editor_config_debug`   Numerical variable. If set, debug messages are added
+                        to the editorconfig info and are displayable with
+                        |:EditorConfig| `status`. Higher numbers, mean more debug
+                        messages.
+
+`EditorConfigPre()`       If a function with this name exists, it is called
+                        before the editorconfig is processed and applied.
+
+`EditorConfigPost()`      If a function with this name exists, it is called
+                        after the editorconfig properties were applied to the
+                        buffer.
+
+
+==============================================================================
+5. Extending Editorconfig                             *editorconfig-extending*
+
+New custom editorconfig properties can be defined using the global dictionary
+`g:editor_config_config`. The variable must be defined before the editorconfig
+plugin is loaded!
+
+The entries in this dictionaries uses the name of the property as key and a
+dictionary as value.
+
+Possible keys in the value dictionary are:
+
+`lower_case`            If this key is present and set to `true`, the value of
+                      the property is changed to lower case.
+                      (optional)
+
+`value_process`         Is a optional |funcref| to a function to be called
+                      with the name of the option and its value. It must
+                      return the processed value. If the value can't be
+                      handled, the function must throw an exception with the
+                      text prefixed with "EditorConfig: ".
+                      Example:
+>
+                      function! s:PositiveInteger(name, value)
+                        let int = str2nr(a:value)
+                        if int <= 0
+                          throw "EditorConfig: Invalid " . a:name . ": \""
+                            \ . a:value . "\""
+                        endif
+                        return int
+                      endfunction
+<
+                      There are two special return values handled by the
+                      plugin:
+                      - `unset`    This is handled as if the value was
+                                 initially set to `unset`.
+                      - `_IGNORE_` If this value is returned, the plugin acts
+                                 as if the property was not given at all.
+
+`execute`              This describes what needs to be done to apply the
+                     property. The value is either a string or a |funcref| or
+                     a dictionary with string keys and a string or a |funcref|
+                     as value.
+                     If the value is a string, the `{v}` is replaced with the
+                     value. The marker `{e}` is replaced with the escaped
+                     value, meaning `<space>`, `|` and `\` are escaped with a
+                     backslash.
+                     The |funcref| is called with the value as parameter.
+
+
+Examples:
+---------
+
+New option `readonly`. If the property has the value `true` the setlocal
+command is executed. If `false` nothing is to be done. The entry for `false`
+is needed anyway, to identify it as a valid value.
+NOTE: The keys to the dictionary in `execute` are always lower case!
+>
+    let g:editor_config_config = {
+        \ 'readonly': {
+        \   'execute': {
+        \     'true': 'setlocal readonly nomodifiable',
+        \     'false': ''
+        \   }
+        \ }
+<
+New option `conceallevel` (see |conceallevel|):
+>
+    function ValidateConceal(name, value)
+      if a:value =~# '^\d\+$'
+        let i = str2nr(a:value)
+        if i >= 0 && i <= 3
+          return i
+        endif
+      endif
+      throw "EditorConfig: " . a:name . " = " . a:value . " invalid"
+    endfunc
+
+    let g:editor_config_config = {
+        \ 'conceallevel': {
+        \   'value_process`: funcref('ValidateConceal'),
+        \   'execute': 'setlocal conceallevel=%d'
+        \   }
+        \ }
+<
+To disable the support for a known property, define it with an empty `execute`.
+The following disables support for the property `indent_style`:
+>
+    let g:editor_config_config = { 'indent_style': { 'execute': '' } }
+<
+
+Support Functions:
+------------------
+
+Editorconfig provides three functions to add messages to its info or warning
+list. This messages can later be displayed with the |:EditorConfig| `status`
+command.
+
+`editorconfig#Info(msg)`  Adds the given message to the list of info messages.
+
+`editorconfig#Warning(msg)`
+                        Adds the given message to the list of warning messages.
+
+`editorconfig#Debug(msg, ...)`
+                      If `g:editor_config_debug` is set, adds the given
+                      formatted message to the list of info messages. This is
+                      to be used like |printf()|. Example:
+                      `editor_config_debug#Debug("Hello %s", "world")`
+
+BTW: The function |EditorConfigPre| and |EditorConfigPost| might also be
+useful when the editorconfig plugin is extended.
+
+==============================================================================
+6. Integrating with the Editorconfig Plugin         *editorconfig-integrating*
+
+Other Vim plugins are able to integrate with this editorconfig plugin. They
+can register a listener and are then called whenever editorconfig applies a
+property to the current buffer.
+
+The listener function is called with two arguments:
+
+1. `property` the name of the editorconfig property
+2. `value`    the value of the editorconfig property
+
+Note: If a called listener throws an exception it is automatically
+unregistered and not called again.
+
+`editorconfiglistener#register(funcref)`
+                        Registers the given funcref as listener.
+
+`editorconfiglistener#unregister(funcref)`
+                        Removes the given funcref from the listener list.
+
+Example:
+--------
+>
+    function! EditorConfigDebug(property, value)
+        echomsg "Editorconfig: " . a:property . " = " . a:value
+    endfunction
+
+    call editorconfiglistener#register(funcref("EditorConfigDebug"))
+<
+
+The function `EditorConfigDebug` is called whenever the editorconfig plugin
+applies a property.
+
+BTW: If you add the above code to your `vimrc` you might need to add
+`packloadall` before registering the listener.
+
+Example Output:
+---------------
+>
+    Editorconfig: insert_final_newline = true
+    Editorconfig: charset = utf-8
+    Editorconfig: indent_style = space
+    Editorconfig: indent_size = 2
+    Editorconfig: trim_trailing_whitespace = true
+<
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
