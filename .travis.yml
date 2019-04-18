@@ -1,13 +1,13 @@
-
+language: generic
 dist: xenial
 
 sudo: required
 
 before_install:
   - sudo add-apt-repository ppa:jonathonf/vim -y
-  - sudo add-apt-repository ppa:neovim-ppa/stable -y
+    #- sudo add-apt-repository ppa:neovim-ppa/stable -y
   - sudo apt-get update
-  - sudo apt-get install -y xvfb vim-gtk3 neovim
+  - sudo apt-get install -y xvfb vim-gtk3
 
 before_script:
   - export DISPLAY=':99.0'

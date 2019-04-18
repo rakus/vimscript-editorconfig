@@ -1,4 +1,6 @@
 
+[![Build Status](https://www.travis-ci.org/rakus/vimscript-editorconfig.svg?branch=master)](https://www.travis-ci.org/rakus/vimscript-editorconfig)
+
 # VimScript-EditorConfig
 
 This plugin adds [editorconfig][1] support to Vim.
