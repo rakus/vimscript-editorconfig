@@ -13,6 +13,9 @@ if [ -d "$HOME/local/neovim/bin" ]; then
     PATH="$PATH:$HOME/local/neovim/bin"
 fi
 
+VIM_TST_EXE="${VIM_TST_EXE:-vim}"
+NEOVIM_TST_EXE="${NEOVIM_TST_EXE:-nvim}"
+
 while getopts "v" o "$@"; do
     case $o in
         v)  verbose=true ;;
@@ -75,18 +78,16 @@ run_tests()
     done
 }
 
-echo "Testing vim"
-run_tests vim --not-a-term
-
-# to be removed once a working neovim is available
-if [ -n "$TRAVIS" ]; then
-    echo "Neovim skipped on travis"
-    exit $exit_code
+if command -v "$VIM_TST_EXE" >/dev/null 2>&1; then
+    echo "Testing vim ($(command -v "$VIM_TST_EXE"))"
+    run_tests "$VIM_TST_EXE" --not-a-term
+else
+    echo "Vim not available"
 fi
 
-if command -v nvim >/dev/null 2>&1; then
-    echo "Testing nvim"
-    run_tests nvim --headless
+if command -v "$NEOVIM_TST_EXE" >/dev/null 2>&1; then
+    echo "Testing nvim ($(command -v "$NEOVIM_TST_EXE"))"
+    run_tests "$NEOVIM_TST_EXE" --headless
 else
     echo "Neovim not available"
 fi

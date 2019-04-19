@@ -5,9 +5,11 @@ sudo: required
 
 before_install:
   - sudo add-apt-repository ppa:jonathonf/vim -y
-    #- sudo add-apt-repository ppa:neovim-ppa/stable -y
   - sudo apt-get update
   - sudo apt-get install -y xvfb vim-gtk3
+  - export NEOVIM_TST_EXE=/tmp/nvim.appimage
+  - curl -L -o "$NEOVIM_TST_EXE" https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage
+  - chmod +x "$NEOVIM_TST_EXE"
 
 before_script:
   - export DISPLAY=':99.0'
