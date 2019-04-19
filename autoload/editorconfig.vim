@@ -253,7 +253,8 @@ function s:ProcessOption(ctx, kv)
       let Cmd = funcref(Cmd, [ value])
     else
       try
-        let value = escape(escape(value, '\'), '\')
+        " We insert the value in a string, escape backslashes
+        let value = escape(value, '\')
         let Cmd = substitute(Cmd, '{v}', value, 'g')
         " TODO: Escape more characters in property value?
         let Cmd = substitute(Cmd, '{e}', escape(value, ' |\'), 'g')

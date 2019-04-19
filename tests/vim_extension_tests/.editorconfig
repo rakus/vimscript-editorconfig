@@ -21,3 +21,12 @@ tab_width=15
 
 [escape_test.txt]
 string=f:\not-there\also-not-there,.
+
+[escape_test2.txt]
+string2=f:\not-there\also-not-there,.
+
+[buffer_local_var.txt]
+buflocal = test\case
+
+[buffer_local_var2.txt]
+buflocal2 = case\test

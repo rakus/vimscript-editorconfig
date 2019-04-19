@@ -280,7 +280,19 @@ Possible keys in the value dictionary are:
 Examples:
 ---------
 
-New option `readonly`. If the property has the value `true` the setlocal
+New property `testcase` to set a buffer local variabel:
+>
+    let g:editor_config_config = {
+        \ 'testcase': { 'execute': "let b:testcase='{v}'" }
+<
+Note the usage of double and single quotes in the value of `execute`. This way
+the value is a |literal-string|, which means there is no need to escape
+backslashes. If the quotes are reverted (using singles to enclose the entire
+string and double quotes for the assignment), the replacement `{e}` has to be
+used to ensure proper escaping of backslashes. Like `'let b:testcase="{e}"'`
+
+
+New property `readonly`. If the property has the value `true` the setlocal
 command is executed. If `false` nothing is to be done. The entry for `false`
 is needed anyway, to identify it as a valid value.
 NOTE: The keys to the dictionary in `execute` are always lower case!
@@ -293,7 +305,8 @@ NOTE: The keys to the dictionary in `execute` are always lower case!
         \   }
         \ }
 <
-New option `conceallevel` (see |conceallevel|):
+
+New property `conceallevel` (see |conceallevel|):
 >
     function ValidateConceal(name, value)
       if a:value =~# '^\d\+$'
@@ -312,6 +325,7 @@ New option `conceallevel` (see |conceallevel|):
         \   }
         \ }
 <
+
 To disable the support for a known property, define it with an empty `execute`.
 The following disables support for the property `indent_style`:
 >

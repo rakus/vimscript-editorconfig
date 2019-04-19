@@ -17,19 +17,19 @@ let s:TEST_FILE_DIR=TEST_DIR . '/editorconfig-core-test/filetree/'
 
 " Global variable g:ecTestResult defined in test_runner.vim
 let g:editor_config_config = {
-      \ 'key': { 'execute': 'let g:ecTestResult .= "key={v}\n"' },
-      \ 'key1': { 'execute': 'let g:ecTestResult .= "key1={v}\n"' },
-      \ 'key2': { 'execute': 'let g:ecTestResult .= "key2={v}\n"' },
-      \ 'key4': { 'execute': 'let g:ecTestResult .= "key4={v}\n"' },
-      \ 'child': { 'execute': 'let g:ecTestResult .= "child={v}\n"' },
-      \ 'name': { 'execute': 'let g:ecTestResult .= "name={v}\n"' },
-      \ 'charset': { 'execute': 'let g:ecTestResult .= "charset={v}\n"' },
-      \ 'tab_width': { 'execute': 'let g:ecTestResult .= "tab_width={v}\n"' },
-      \ 'indent_size': { 'execute': 'let g:ecTestResult .= "indent_size={v}\n"' },
-      \ 'insert_final_newline': { 'execute': 'let g:ecTestResult .= "insert_final_newline={v}\n"' },
-      \ 'trim_trailing_whitespace': { 'execute': 'let g:ecTestResult .= "trim_trailing_whitespace={v}\n"' },
-      \ 'indent_style': { 'execute': 'let g:ecTestResult .= "indent_style={v}\n"' },
-      \ 'end_of_line': { 'execute': 'let g:ecTestResult .= "end_of_line={v}\n"' },
+      \ 'key':                      { 'execute': "let g:ecTestResult .= 'key={v}\n'" },
+      \ 'key1':                     { 'execute': "let g:ecTestResult .= 'key1={v}\n'" },
+      \ 'key2':                     { 'execute': "let g:ecTestResult .= 'key2={v}\n'" },
+      \ 'key4':                     { 'execute': "let g:ecTestResult .= 'key4={v}\n'" },
+      \ 'child':                    { 'execute': "let g:ecTestResult .= 'child={v}\n'" },
+      \ 'name':                     { 'execute': "let g:ecTestResult .= 'name={v}\n'" },
+      \ 'charset':                  { 'execute': "let g:ecTestResult .= 'charset={v}\n'" },
+      \ 'tab_width':                { 'execute': "let g:ecTestResult .= 'tab_width={v}\n'" },
+      \ 'indent_size':              { 'execute': "let g:ecTestResult .= 'indent_size={v}\n'" },
+      \ 'insert_final_newline':     { 'execute': "let g:ecTestResult .= 'insert_final_newline={v}\n'" },
+      \ 'trim_trailing_whitespace': { 'execute': "let g:ecTestResult .= 'trim_trailing_whitespace={v}\n'" },
+      \ 'indent_style':             { 'execute': "let g:ecTestResult .= 'indent_style={v}\n'" },
+      \ 'end_of_line':              { 'execute': "let g:ecTestResult .= 'end_of_line={v}\n'" },
       \ }
 
 

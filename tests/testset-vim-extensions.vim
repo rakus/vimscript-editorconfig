@@ -11,8 +11,15 @@ let s:TEST_FILE_DIR=TEST_DIR . '/vim_extension_tests/'
 let g:editor_config_debug = 3
 runtime plugin/editorconfig.vim
 
+function s:SetDirectoryOption(val)
+  let &directory = a:val
+endfunction
+
 let g:editor_config_config = {
-      \ 'string': { 'execute': 'set directory={v}' },
+      \ 'string':    { 'execute': 'set directory={e}' },
+      \ 'string2':   { 'execute': funcref("s:SetDirectoryOption") },
+      \ 'buflocal':  { 'execute': "let b:buflocal='{v}'" },
+      \ 'buflocal2': { 'execute': 'let b:buflocal="{e}"' },
       \ }
 execute "source " . escape(TEST_DIR, ' \')  . "/test_runner.vim"
 
@@ -38,8 +45,17 @@ let s:test_desc['ignore-ft-markdown'] = { 'file': 'ignored.md', 'expect': { '&ta
 " test file with leading dot is detected
 let s:test_desc['file-leading-dot'] = { 'file': '.vimrc', 'expect': { '&tabstop': 15 }}
 
-" test file with leading dot is detected
+" test backslashes in property value setting value `set` command
 let s:test_desc['escape_test'] = { 'file': 'escape_test.txt', 'expect': { '&directory': 'f:\not-there\also-not-there,.' }}
+
+" test backslashes in property value setting value via funcref
+let s:test_desc['escape_test2'] = { 'file': 'escape_test2.txt', 'expect': { '&directory': 'f:\not-there\also-not-there,.' }}
+
+" test var assignment single quotes
+let s:test_desc['buffer_local_var_single'] = { 'file': 'buffer_local_var.txt', 'expect': { 'b:buflocal': 'test\case' }}
+
+" test var assignment double quotes
+let s:test_desc['buffer_local_var_double'] = { 'file': 'buffer_local_var2.txt', 'expect': { 'b:buflocal': 'case\test' }}
 
 
 execute "cd " . s:TEST_FILE_DIR
