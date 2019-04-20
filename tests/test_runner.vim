@@ -34,7 +34,7 @@ function! s:run_test(name, spec)
       endif
     endfor
   finally
-    let g:editor_config_info = split(execute('EditorConfig status'), "\n")
+    let g:editor_config_info = split(execute('EditorConfigStatus'), "\n")
     bwipeout!
   endtry
 endfunction

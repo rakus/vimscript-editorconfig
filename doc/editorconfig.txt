@@ -162,14 +162,14 @@ might change!
 ==============================================================================
 3. Commands                                   *editorconfig-cmd* *:EditorConfig*
 
-                                                          *EditorConfig-apply*
-:EditorConfig[!] apply  (Re)Applies editorconfig settings to the current file.
+                                                           *EditorConfigApply*
+:EditorConfigApply[!]   (Re)Applies editorconfig settings to the current file.
                         If `!` is given, ignores |g:editor_config_blacklist|
                         and applies the settings to files that normally would
                         be ignored.
 
-                                                         *EditorConfig-status*
-:EditorConfig status    This command prints information about the editorconfig
+                                                          *EditorConfigStatus*
+:EditorConfigStatus     This command prints information about the editorconfig
                         applied to the current file. It prints applied
                         settings, warning and error messages.
                         Example output:
@@ -187,6 +187,13 @@ might change!
 
 ==============================================================================
 4. Customization                                  *editorconfig-customization*
+
+`g:editor_config_base_dirs`
+                        List of directories (absolute names) to be whitelisted
+			for editorconfig. Only files opened below one of this
+			directories triggers the search for `.editorconfig`
+			files.
+			If empty, always search for `.editorconfig`.
 
 `g:editor_config_blacklist`
                         Prevent applying editorconfig by filetypes or
