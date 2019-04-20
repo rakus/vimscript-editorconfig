@@ -19,7 +19,12 @@ function! s:run_test(name, spec)
 
   try
     let fn = a:spec.file
-    execute "silent edit " . fn
+    try
+      execute "silent edit " . fn
+    catch /.*/
+      call add(v:errors, v:exception)
+      throw "Internal: " . v:exception
+    endtry
 
     for [opt, value] in items(a:spec.expect)
       try
@@ -34,7 +39,7 @@ function! s:run_test(name, spec)
       endif
     endfor
   finally
-    let g:editor_config_info = split(execute('EditorConfigStatus'), "\n")
+    call extend(g:editor_config_info, split(execute('EditorConfigStatus'), "\n"))
     bwipeout!
   endtry
 endfunction

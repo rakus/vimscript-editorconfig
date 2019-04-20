@@ -69,7 +69,12 @@ call s:new_ec_test("spaces_after_property_value", "whitespace.in", "test5.c", '^
 call s:new_ec_test_multiline("blank_lines_between_properties_ML", "whitespace.in", "test6.c", 'key1=value1[ \t]*[\n\r]+key2=value2[ \t\n\r]*')
 
 " test spaces in section name
-" VIM: Doesn't work on Windows, Vim strips trailing space in fnamemodify()
+" VIM: Doesn't work on Windows. Trailing space is gone after fnamemodify().
+" Quote from 'Support for Whitespace characters in File and Folder names for
+" Windows 8, Windows RT and Windows Server 2012':
+" 'File and Folder names that begin or end with the ASCII Space (0x20) will be
+" saved without these characters. ...'
+" (https://support.microsoft.com/en-ca/help/2829981/support-for-whitespace-characters-in-file-and-folder-names-for-windows):
 if match(fnamemodify(" test 7 ", ':p'), ' $') > 0
     call s:new_ec_test("spaces_in_section_name", "whitespace.in", ' test 7 ', '^key=value[ \t\n\r]*$')
 endif

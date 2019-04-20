@@ -10,3 +10,5 @@ if exists("$LOG_DIR")
   set directory=$LOG_DIR
 endif
 
+set noswapfile
+
