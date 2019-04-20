@@ -306,6 +306,10 @@ endif
 " from https://github.com/editorconfig/editorconfig-core-py
 function s:GlobToRegEx(pat,...)
 
+  if has_key(s:glob2re_cache, a:pat)
+    return s:glob2re_cache[a:pat]
+  endif
+
   let length = strlen(a:pat)
   let brace_level = 0
   let in_brackets = v:false
@@ -428,6 +432,7 @@ function s:GlobToRegEx(pat,...)
       let re = s:RE_FSEP . re
     endif
     let re .= '$'
+    let  s:glob2re_cache[a:pat] = re
   endif
 
   try
@@ -641,21 +646,8 @@ function! editorconfig#HandleEditorConfig(filename, ec_files)
 
 endfunction
 
-" Editor config command interface
-" Currently only supports 'status' to report - wel - status
-" Note: Subcommand 'apply' is directly handled in plugin/editorconfig.vim
-function! editorconfig#EditorConfigCmd(bang, subcmd)
-  if a:subcmd == 'status'
-    call s:EditorConfigStatus()
-  else
-    echohl ErrorMsg
-    echomsg "Editorconfig: Unknown command '" . a:subcmd . "'"
-    echohl None
-  endif
-endfunction
-
 " print status of editor config for current buffer
-function! s:EditorConfigStatus()
+function! editorconfig#EditorConfigStatus()
   if ! exists("b:editor_config")
     echohl ErrorMsg
     echo "No EditorConfig loaded."
