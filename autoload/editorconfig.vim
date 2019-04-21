@@ -280,8 +280,11 @@ function s:GlobRange2Re(lower, upper)
 endfunction
 
 " braces without or equal number of leading backslashes
-let s:LEFT_BRACE = '\(\(\(\\\\\)*\)\@>\\\)\@<!{'
-let s:RIGHT_BRACE = '\(\(\(\\\\\)*\)\@>\\\)\@<!}'
+let s:UNESC_LEFT_BRACE = '\(\(\(\\\\\)*\)\@>\\\)\@<!{'
+let s:UNESC_RIGHT_BRACE = '\(\(\(\\\\\)*\)\@>\\\)\@<!}'
+" a not escaped comma
+let s:UNESC_COMMA = '\(\(\(\\\\\)*\)\@>\\\)\@<!,'
+" a number range like '1..5' or '-5..+3'
 let s:NUM_RANG = '[-+]\?\d\+\.\.[-+]\?\d\+'
 
 " count matches of regex in string
@@ -319,29 +322,20 @@ function s:GlobToRegEx(pat,...)
   let brace_level = 0
   let in_brackets = v:false
   let re = ''
-  let is_escaped = v:false
-  let matching_braces = s:countMatch(a:pat, s:LEFT_BRACE) == s:countMatch(a:pat, s:RIGHT_BRACE)
+  let matching_braces = s:countMatch(a:pat, s:UNESC_LEFT_BRACE) == s:countMatch(a:pat, s:UNESC_RIGHT_BRACE)
 
   let idx = 0
   while idx < length
     let c = a:pat[idx]
     let idx += 1
     if c == '*'
-      if is_escaped
-        let re .= '\*'
+      if a:pat[idx] == '*'
+        let re .= '.*'
       else
-        if a:pat[idx] == '*'
-          let re .= '.*'
-        else
-          let re .= s:RE_NOT_FSEP . '*'
-        endif
+        let re .= s:RE_NOT_FSEP . '*'
       endif
     elseif c == '?'
-      if is_escaped
-        let re .= '?'
-      else
-        let re .= '.'
-      endif
+      let re .= '.'
     elseif c == '['
       if in_brackets
         let re .= '\['
@@ -376,20 +370,15 @@ function s:GlobToRegEx(pat,...)
       let re .= ']'
       let in_brackets = v:false
     elseif c == '{'
-      if is_escaped
-        let re .= '{'
-      else
         let wlk = idx
-        let has_comma = v:false
-        while wlk < length && a:pat[wlk] != '}' || is_escaped
-          if a:pat[wlk] == ',' && !is_escaped
-            let has_comma = v:true
-            break
-          endif
-          let is_escaped = a:pat[wlk] == '\' && !is_escaped
-          let wlk += 1
-        endwhile
-        if !has_comma && wlk < length
+
+        " find closing } and check if ',' is in range
+        let wlk = match(a:pat, s:UNESC_RIGHT_BRACE, idx)
+        let comma_idx = match(a:pat, s:UNESC_COMMA, idx)
+        let has_comma = comma_idx >= 0 && comma_idx < wlk
+        unlet comma_idx
+
+        if !has_comma && wlk >= 0
           let num_range = matchstr(a:pat[idx:(wlk-1)], s:NUM_RANG)
           if !empty(num_range)
             let bounds = eval(substitute(num_range, '^\([-+]\?\d\+\)\.\.\([-+]\?\d\+\)$', "[ \\1, \\2 ]", ''))
@@ -405,15 +394,14 @@ function s:GlobToRegEx(pat,...)
         else
           let re .= '{'
         endif
-      endif
     elseif c == ','
-      if brace_level > 0 && !is_escaped
+      if brace_level > 0
         let re .= '\|'
       else
         let re .= ','
       endif
     elseif c == '}'
-      if brace_level > 0 && !is_escaped
+      if brace_level > 0
         let re .= '\)'
         let brace_level -= 1
       else
@@ -427,18 +415,12 @@ function s:GlobToRegEx(pat,...)
         let re .= s:RE_FSEP
         " '/'
       endif
+    elseif c == '\'
+      let re .= escape(a:pat[idx], '^$[]*.\\')
+      let idx += 1
     elseif c != '\'
       " TODO: Escape c here! Better way?
       let re .= escape(c, '^$[]*.')
-    endif
-
-    if c == '\'
-      if is_escaped
-        let re .= '\\'
-      endif
-      let is_escaped = !is_escaped
-    else
-      let is_escaped = v:false
     endif
   endwhile
 
