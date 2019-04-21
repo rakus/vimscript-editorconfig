@@ -55,7 +55,13 @@ function! RunTestSet(name, tests)
   for [name, spec] in items(a:tests)
     let tst_count += 1
     let v:errors = []
-    call s:run_test(name, spec)
+    try
+      call s:run_test(name, spec)
+    catch /Internal: .*/
+      " Ignored - already handled
+    catch /.*/
+      call add(v:errors, v:exception)
+    endtry
     if !empty(v:errors)
       let tst_fail += 1
       let msgs = copy(v:errors)
