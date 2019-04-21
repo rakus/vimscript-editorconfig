@@ -23,6 +23,10 @@ let s:enc_re = [ '^8bit-\S\+$', '^cp\d\+$', '^2byte-\S\+$' ]
 " cache to store glob to regex translations
 let s:glob2re_cache = {}
 
+function editorconfig#ClearCache()
+  let s:glob2re_cache = {}
+endfunction
+
 " checks hat the value is a integer > 0
 " throws exception if not
 function! s:PositiveInteger(name, value)
