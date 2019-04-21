@@ -1,32 +1,79 @@
 root=true
 
+# plugin specific extension
 [de_de.txt]
 spell_lang = de_de
 spell_check = true
 
+# blacklisted by full name
 [ignore_by_name.txt]
 tab_width=11
 
+# blacklisted by glob
 [*.xyz]
 tab_width=12
 
+# blacklisted by filetype 'c'
 [ignore_by_filetype.c]
 tab_width=13
 
+# blacklisted by filetype glob 'mark*'
 [*.md]
 tab_width=14
 
+# test filename with leading dot
 [.vimrc]
 tab_width=15
 
+# backslash in property value used in 'set'
 [escape_test.txt]
 string=f:\not-there\also-not-there,.
 
+# backslash in property value used to call function
 [escape_test2.txt]
 string2=f:\not-there\also-not-there,.
 
+# backslash in property value used with 'let' and single quotes
 [buffer_local_var.txt]
 buflocal = test\case
 
+# backslash in property value used with 'let' and double quotes
 [buffer_local_var2.txt]
 buflocal2 = case\test
+
+# multibyte chars in glob choice
+[multibyte-choice.{中,文}]
+buflocal=multibyte-choice
+
+# multibyte chars in glob collection
+[multibyte-collection.[中,文]]
+buflocal=multibyte-collection
+
+
+[dot.c]
+tab_width=16
+
+# test file with linebreak
+[*.abc]
+tab_width=17
+
+# test file with linebreak
+[test*.abd]
+tab_width=18
+
+[a\*.abc]
+tab_width=19
+
+[a\?.abc]
+tab_width=20
+
+[a\[.abc]
+tab_width=21
+
+[a\{.abc]
+tab_width=22
+
+[b{.abc]
+tab_width=23
+
+

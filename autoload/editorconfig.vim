@@ -308,6 +308,7 @@ endif
 
 " This function is a translation of a python function
 " from https://github.com/editorconfig/editorconfig-core-py
+" plus some extension. e.g. handling `a\*.abc`
 function s:GlobToRegEx(pat,...)
 
   if has_key(s:glob2re_cache, a:pat)
@@ -326,13 +327,21 @@ function s:GlobToRegEx(pat,...)
     let c = a:pat[idx]
     let idx += 1
     if c == '*'
-      if a:pat[idx] == '*'
-        let re .= '.*'
+      if is_escaped
+        let re .= '\*'
       else
-        let re .= s:RE_NOT_FSEP . '*'
+        if a:pat[idx] == '*'
+          let re .= '.*'
+        else
+          let re .= s:RE_NOT_FSEP . '*'
+        endif
       endif
     elseif c == '?'
-      let re .= '.'
+      if is_escaped
+        let re .= '?'
+      else
+        let re .= '.'
+      endif
     elseif c == '['
       if in_brackets
         let re .= '\['
@@ -367,31 +376,35 @@ function s:GlobToRegEx(pat,...)
       let re .= ']'
       let in_brackets = v:false
     elseif c == '{'
-      let wlk = idx
-      let has_comma = v:false
-      while wlk < length && a:pat[wlk] != '}' || is_escaped
-        if a:pat[wlk] == ',' && !is_escaped
-          let has_comma = v:true
-          break
-        endif
-        let is_escaped = a:pat[wlk] == '\' && !is_escaped
-        let wlk += 1
-      endwhile
-      if !has_comma && wlk < length
-        let num_range = matchstr(a:pat[idx:(wlk-1)], s:NUM_RANG)
-        if !empty(num_range)
-          let bounds = eval(substitute(num_range, '^\([-+]\?\d\+\)\.\.\([-+]\?\d\+\)$', "[ \\1, \\2 ]", ''))
-          let re .= s:GlobRange2Re(bounds[0], bounds[1])
-        else
-          let inner = s:GlobToRegEx(a:pat[idx:(wlk-1)], v:true)
-          let re .= '{' . inner . '}'
-        endif
-        let idx = wlk + 1
-      elseif matching_braces
-        let re .= '\%('
-        let brace_level += 1
-      else
+      if is_escaped
         let re .= '{'
+      else
+        let wlk = idx
+        let has_comma = v:false
+        while wlk < length && a:pat[wlk] != '}' || is_escaped
+          if a:pat[wlk] == ',' && !is_escaped
+            let has_comma = v:true
+            break
+          endif
+          let is_escaped = a:pat[wlk] == '\' && !is_escaped
+          let wlk += 1
+        endwhile
+        if !has_comma && wlk < length
+          let num_range = matchstr(a:pat[idx:(wlk-1)], s:NUM_RANG)
+          if !empty(num_range)
+            let bounds = eval(substitute(num_range, '^\([-+]\?\d\+\)\.\.\([-+]\?\d\+\)$', "[ \\1, \\2 ]", ''))
+            let re .= s:GlobRange2Re(bounds[0], bounds[1])
+          else
+            let inner = s:GlobToRegEx(a:pat[idx:(wlk-1)], v:true)
+            let re .= '{' . inner . '}'
+          endif
+          let idx = wlk + 1
+        elseif matching_braces
+          let re .= '\%('
+          let brace_level += 1
+        else
+          let re .= '{'
+        endif
       endif
     elseif c == ','
       if brace_level > 0 && !is_escaped
@@ -416,7 +429,7 @@ function s:GlobToRegEx(pat,...)
       endif
     elseif c != '\'
       " TODO: Escape c here! Better way?
-      let re .= escape(c, ']')
+      let re .= escape(c, '^$[]*.')
     endif
 
     if c == '\'

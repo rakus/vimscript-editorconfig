@@ -57,6 +57,36 @@ let s:test_desc['buffer_local_var_single'] = { 'file': 'buffer_local_var.txt', '
 " test var assignment double quotes
 let s:test_desc['buffer_local_var_double'] = { 'file': 'buffer_local_var2.txt', 'expect': { 'b:buflocal': 'case\test' }}
 
+" test multibyte in glob choice
+let s:test_desc['multibyte-glob-choice'] = { 'file': 'multibyte-choice.中', 'expect': { 'b:buflocal': 'multibyte-choice' }}
+
+" test multibyte in glob choice
+let s:test_desc['multibyte-glob-collection'] = { 'file': 'multibyte-collection.中', 'expect': { 'b:buflocal': 'multibyte-collection' }}
+
+" test dot is correctly escaped in glob2re
+let s:test_desc['dot-escaped'] = { 'file': 'dot_c', 'expect': { '&tabstop != 16': 1 }}
+
+" test filename with line break
+let s:test_desc['name-linebreak'] = { 'file': "test\\\ncase.abc", 'expect': { '&tabstop': 17 }}
+
+" test filename with line break
+let s:test_desc['name-linebreak2'] = { 'file': "test\\\ncase.abd", 'expect': { '&tabstop': 18 }}
+
+" test filename with asterisk (*)
+let s:test_desc['name-asterisk'] = { 'file': 'a\*.abc', 'expect': { '&tabstop': 19 }}
+
+" test filename with question mark
+let s:test_desc['name-question'] = { 'file': 'a\?.abc', 'expect': { '&tabstop': 20 }}
+
+" test filename with right square bracket
+let s:test_desc['name-right-square'] = { 'file': 'a[.abc', 'expect': { '&tabstop': 21 }}
+
+" test filename with right curly bracket
+let s:test_desc['name-right-curly'] = { 'file': 'a\{.abc', 'expect': { '&tabstop': 22 }}
+
+" test filename with right curly bracket 2
+let s:test_desc['name-right-curly'] = { 'file': 'b\{.abc', 'expect': { '&tabstop': 23 }}
+
 
 execute "cd " . s:TEST_FILE_DIR
 if 0 != RunTestSet("vim-extensions", s:test_desc)
