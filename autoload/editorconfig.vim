@@ -192,9 +192,14 @@ endfunction
 function! editorconfig#Warning(msg)
   call add(b:editor_config_warning, a:msg)
 endfunction
+" Add msg to warning list
+function! editorconfig#Error(msg)
+  call add(b:editor_config_warning, a:msg)
+endfunction
 " Add msg to info list, if debug enabled
 function! editorconfig#Debug(msg, ...)
   if get(g:, 'editor_config_debug', 0) > 0
+    " Debug might be called before buffer local vars are created.
     if !exists("b:editor_config")
       let b:editor_config = []
     endif
@@ -282,6 +287,10 @@ endfunction
 " braces without or equal number of leading backslashes
 let s:UNESC_LEFT_BRACE = '\(\(\(\\\\\)*\)\@>\\\)\@<!{'
 let s:UNESC_RIGHT_BRACE = '\(\(\(\\\\\)*\)\@>\\\)\@<!}'
+
+let s:UNESC_RIGHT_BRACKET = '\(\(\(\\\\\)*\)\@>\\\)\@<!\]'
+let s:UNESC_SLASH = '\(\(\(\\\\\)*\)\@>\\\)\@<!/'
+
 " a not escaped comma
 let s:UNESC_COMMA = '\(\(\(\\\\\)*\)\@>\\\)\@<!,'
 " a number range like '1..5' or '-5..+3'
@@ -309,12 +318,22 @@ else
 endif
 
 
+function s:GetCharAtByteIndex(str, index)
+  " AFAIK maximum length of utf8-char is 4 byte
+  let sp = a:str[a:index:(a:index+3)]
+  let chr = strcharpart(sp, 0, 1)
+  return [ chr, (a:index + strlen(chr)) ]
+endfunction
+
+
 " This function is a translation of a python function
 " from https://github.com/editorconfig/editorconfig-core-py
 " plus some extension. e.g. handling `a\*.abc`
 function s:GlobToRegEx(pat,...)
 
-  if has_key(s:glob2re_cache, a:pat)
+  let outer = empty(a:000)
+
+  if outer && has_key(s:glob2re_cache, a:pat)
     return s:glob2re_cache[a:pat]
   endif
 
@@ -324,10 +343,10 @@ function s:GlobToRegEx(pat,...)
   let re = ''
   let matching_braces = s:countMatch(a:pat, s:UNESC_LEFT_BRACE) == s:countMatch(a:pat, s:UNESC_RIGHT_BRACE)
 
+  let loop = 0
   let idx = 0
   while idx < length
-    let c = a:pat[idx]
-    let idx += 1
+    let [c, idx] = s:GetCharAtByteIndex(a:pat, idx)
     if c == '*'
       if a:pat[idx] == '*'
         let re .= '.*'
@@ -342,13 +361,11 @@ function s:GlobToRegEx(pat,...)
       else
         let wlk = idx
         let has_slash = v:false
-        while wlk < length && a:pat[wlk] != ']'
-          if a:pat[wlk] == '/' && a:pat[wlk-1] != '\'
-            let has_slash = v:true
-          endif
-          let wlk += 1
-        endwhile
-        if wlk == length
+        let wlk = match(a:pat, s:UNESC_RIGHT_BRACKET, idx)
+        let slash_idx = match(a:pat, s:UNESC_SLASH, idx)
+        let has_slash = slash_idx >= 0 && slash_idx < wlk
+        unlet slash_idx
+        if wlk < 0
           let re .= '\['
         elseif has_slash
           " TODO: I think recursive is correct
@@ -416,15 +433,16 @@ function s:GlobToRegEx(pat,...)
         " '/'
       endif
     elseif c == '\'
-      let re .= escape(a:pat[idx], '^$[]*.\\')
-      let idx += 1
+      let [ c, idx ] = s:GetCharAtByteIndex(a:pat, idx)
+      let re .= escape(c, '^$[]*.\\')
     elseif c != '\'
       " TODO: Escape c here! Better way?
       let re .= escape(c, '^$[]*.')
     endif
+    let loop += 1
   endwhile
 
-  if empty(a:000)
+  if outer
     if stridx(a:pat, '/') < 0
       let re = s:RE_FSEP . '\(.*' . s:RE_FSEP . '\)\?' . re
     elseif strpart(re, 0, strlen(s:RE_FSEP)) != s:RE_FSEP
@@ -434,15 +452,14 @@ function s:GlobToRegEx(pat,...)
     let  s:glob2re_cache[a:pat] = re
   endif
 
-  try
-    call match("", re)
-    if get(g:, "editor_config_debug", 0) >= 3
+  if get(g:, "editor_config_debug", 0) >= 3
+    try
+      call match("", re)
       call editorconfig#Debug("Glob2RE: %s -> %s", a:pat, re)
-    endif
-  catch /.*/
-    echoms "Exception: " v:exception
-    echoerr "Invalid regex: " . a:pat . " -> " . re
-  endtry
+    catch /.*/
+      editorconfig#Error("Invalid regex: " . a:pat . " -> " . re . " Exception: " . v:exception)
+    endtry
+  endif
 
   return re
 endfunction

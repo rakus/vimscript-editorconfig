@@ -16,11 +16,13 @@ fi
 VIM_TST_EXE="${VIM_TST_EXE:-vim}"
 NEOVIM_TST_EXE="${NEOVIM_TST_EXE:-nvim}"
 
-while getopts "v" o "$@"; do
+while getopts "v1" o "$@"; do
     case $o in
         v)  verbose=true ;;
+        1)  fail_fast=true ;;
         *)  echo "Usage: run-tests.sh [-v] [testset...]"
             echo "   -v       Allow Vim to output to screen (Neovim runs headless anyway)."
+            echo "   -1       Fail and exit on first failed testset."
             echo "   testset: Names of the testsets to execute. This it a substring match."
             echo "            E.g. 'core' will test all editorconfig-core tests."
             echo "            Unknown names are silently ignored."
@@ -57,6 +59,9 @@ run_single_test()
         exit_code=1
     fi
     cat "$TEST_RESULT_FILE"
+    if [ $exit_code -ne 0 ] && [ -n "$fail_fast" ]; then
+        exit $exit_code
+    fi
 }
 
 run_tests()
@@ -85,11 +90,14 @@ else
     echo "Vim not available"
 fi
 
-if command -v "$NEOVIM_TST_EXE" >/dev/null 2>&1; then
-    echo "Testing nvim ($(command -v "$NEOVIM_TST_EXE"))"
-    run_tests "$NEOVIM_TST_EXE" --headless
-else
-    echo "Neovim not available"
+# don't run nvim in verbose mode
+if [ -z "$verbose" ]; then
+    if command -v "$NEOVIM_TST_EXE" >/dev/null 2>&1; then
+        echo "Testing nvim ($(command -v "$NEOVIM_TST_EXE"))"
+        run_tests "$NEOVIM_TST_EXE" --headless
+    else
+        echo "Neovim not available"
+    fi
 fi
 
 exit $exit_code

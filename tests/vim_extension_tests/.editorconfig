@@ -49,7 +49,6 @@ buflocal=multibyte-choice
 [multibyte-collection.[中,文]]
 buflocal=multibyte-collection
 
-
 [dot.c]
 tab_width=16
 
@@ -75,5 +74,9 @@ tab_width=22
 
 [b{.abc]
 tab_width=23
+
+; Slash after escaped close bracket
+[ab[c\]/]d]
+tab_width=24
 
 

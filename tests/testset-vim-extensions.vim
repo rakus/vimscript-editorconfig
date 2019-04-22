@@ -87,6 +87,10 @@ let s:test_desc['name-right-curly'] = { 'file': 'a\{.abc', 'expect': { '&tabstop
 " test filename with right curly bracket 2
 let s:test_desc['name-right-curly'] = { 'file': 'b\{.abc', 'expect': { '&tabstop': 23 }}
 
+" test filename with right curly bracket 2
+let s:test_desc['slash-after-escaped-bracket'] = { 'file': 'ab[c]/]d', 'expect': { '&tabstop': 24 }}
+
+
 
 execute "cd " . s:TEST_FILE_DIR
 if 0 != RunTestSet("vim-extensions", s:test_desc)
