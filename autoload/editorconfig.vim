@@ -194,11 +194,14 @@ function! editorconfig#Info(msg)
 endfunction
 " Add msg to warning list
 function! editorconfig#Warning(msg)
-  call add(b:editor_config_warning, a:msg)
+  let b:editor_config_status = get(b:, "editor_config_status", "WARNING")
+  call add(b:editor_config, "WARNING: " . a:msg)
 endfunction
 " Add msg to warning list
 function! editorconfig#Error(msg)
-  call add(b:editor_config_warning, a:msg)
+  let b:editor_config_error = v:true
+  let b:editor_config_status = "ERROR"
+  call add(b:editor_config, "ERROR: " . a:msg)
 endfunction
 " Add msg to info list, if debug enabled
 function! editorconfig#Debug(msg, ...)
@@ -213,11 +216,13 @@ endfunction
 
 " Add editorconfig file name, section and msg to warning list
 function! s:ParserWarning(ctx, msg)
-  call add(b:editor_config_warning, a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
+  let b:editor_config_status = get(b:, "editor_config_status", "WARNING")
+  call add(b:editor_config, "WARNING: " . a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
 endfunction
 " Add editorconfig file name, section and msg to error list
 function! s:ParserError(ctx, msg)
-  call add(b:editor_config_error, a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
+  let b:editor_config_status = "ERROR"
+  call add(b:editor_config, "ERROR: " . a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
 endfunction
 
 " ctx: Parsing context: filename, section
@@ -321,7 +326,6 @@ else
   let s:RE_NOT_FSEP='[^/]'
 endif
 
-
 function s:GetCharAtByteIndex(str, index)
   " AFAIK maximum length of utf8-char is 4 byte
   let sp = a:str[a:index:(a:index+3)]
@@ -366,6 +370,7 @@ function s:GlobToRegEx(pat,...)
         let wlk = idx
         let has_slash = v:false
         let wlk = match(a:pat, s:UNESC_RIGHT_BRACKET, idx)
+        " Why is a escaped slash allowed?
         let slash_idx = match(a:pat, s:UNESC_SLASH, idx)
         let has_slash = slash_idx >= 0 && slash_idx < wlk
         unlet slash_idx
@@ -634,8 +639,6 @@ function! editorconfig#HandleEditorConfig(filename, ec_files)
   if !exists("b:editor_config")
     let b:editor_config = []
   endif
-  let b:editor_config_warning = []
-  let b:editor_config_error = []
 
   " parse the editorconfig files until "root = true" is found
   let ec_list = []
@@ -657,7 +660,8 @@ function! editorconfig#HandleEditorConfig(filename, ec_files)
 
   " if not quiet print a message if a error was found
   if ! exists('g:editor_config_quiet')
-    if ! empty(b:editor_config_error) || ( exists('g:editor_config_picky') && ! empty(b:editor_config_warning) )
+    let status = get(b:, "editor_config_status", "")
+    if status == "ERROR" || ( exists('g:editor_config_picky') &&  status == "WARNING" )
       echohl ErrorMsg
       echomsg "EditorConfig Warnings/Errors. Execute ':EditorConfigStatus' for details."
       echohl None
@@ -678,29 +682,18 @@ function! editorconfig#EditorConfigStatus()
   echo "EditorConfig Info:"
   if ! empty(b:editor_config)
     for ln in b:editor_config
+      if ln =~ 'WARNING: .*'
+        echohl WarningMsg
+      elseif ln =~ 'ERROR: .*'
+        echohl ErrorMsg
+      endif
       echo "- " . ln
+      echohl None
     endfor
   else
     echo "None"
   endif
 
-  if exists("b:editor_config_warning") && !empty(b:editor_config_warning)
-    echohl WarningMsg
-    echo "EditorConfig Warnings:"
-    for ln in b:editor_config_warning
-      echo "- " . ln
-    endfor
-    echohl None
-  endif
-
-  if exists("b:editor_config_error") && !empty(b:editor_config_error)
-    echohl ErrorMsg
-    echo "EditorConfig Errors:"
-    for ln in b:editor_config_error
-      echo "- " . ln
-    endfor
-    echohl None
-  endif
 endfunction
 
 
