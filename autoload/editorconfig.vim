@@ -461,14 +461,14 @@ function s:GlobToRegEx(pat,...)
     let  s:glob2re_cache[a:pat] = re
   endif
 
-  if get(g:, "editor_config_debug", 0) >= 3
-    try
-      call match("", re)
-      call editorconfig#Debug("Glob2RE: %s -> %s", a:pat, re)
-    catch /.*/
-      editorconfig#Error("Invalid regex: " . a:pat . " -> " . re . " Exception: " . v:exception)
-    endtry
-  endif
+  try
+    call match("", re)
+    call editorconfig#Debug("Glob2RE: %s -> %s", a:pat, re)
+  catch /.*/
+    editorconfig#Debug("Invalid regex: %s -> %s Exception: %s", a:pat, re, v:exception)
+    editorconfig#Error("Can't translate glob pattern: " . a:pat . " Exception: " . v:exception)
+    throw "Invalid Glob: Can't translate glob pattern: " . a:pat . " Exception: " . v:exception
+  endtry
 
   return re
 endfunction
@@ -497,8 +497,10 @@ function s:ParseFile(fn)
     if ln =~ '^\[.*\]$'
       " found a section ([glob-expr])
       if !empty(pattern)
-        " save previous section
-        call add(cfg.fcfg, [ pattern, fcfg ])
+        if pattern !=# '__INVALID__'
+          " save previous section
+          call add(cfg.fcfg, [ pattern, fcfg ])
+        endif
         let pattern = ''
         let fcfg = {}
       else
@@ -510,11 +512,21 @@ function s:ParseFile(fn)
 
       " translate glob to regex
       let glob = strpart(ln, 1, strlen(ln) -2)
+      let ctx.section = glob
 
-      let pattern = fqdir_re . s:GlobToRegEx(glob)
+      if !empty(glob)
+        try
+          let pattern = fqdir_re . s:GlobToRegEx(glob)
+        catch /Invalid Glob:.*/
+          call s:ParserWarning(ctx, "Ignoring section with invalid glob")
+          let pattern = '__INVALID__'
+        endtry
+      else
+        call s:ParserWarning(ctx, "Ignoring section with empty glob")
+        let pattern = '__INVALID__'
+      endif
       let fcfg['.ec_glob'] = glob
 
-      let ctx.section = glob
       continue
     endif
     if ln =~ '^\w\+\s*[=:]\s*\S.*$'
@@ -530,7 +542,14 @@ function s:ParseFile(fn)
     endif
   endfor
   if !empty(pattern)
-    call add(cfg.fcfg, [ pattern, fcfg ])
+    if pattern != '__INVALID__'
+      call add(cfg.fcfg, [ pattern, fcfg ])
+    endif
+  else
+    " no previous section, so this are toplevel elements
+    for [key, value] in items(fcfg)
+      let cfg[key] = value
+    endfor
   endif
 
   return cfg
