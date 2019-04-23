@@ -101,7 +101,8 @@ function! s:FileEncoding(encoding)
     let fenc = 'utf-8'
   endif
   if fenc != &l:fileencoding
-    call editorconfig#Info("Changed fileencoding from " . &l:fileencoding . " to " . fenc)
+    let org_fenc = empty(&l:fileencoding)? 'unset' : &l:fileencoding
+    call editorconfig#Info("Changed fileencoding from " . org_fenc . " to " . fenc)
     let &l:fileencoding = fenc
     " TODO: Or should we reload the file with the given encoding
     " if Vim decided to choose another?
@@ -631,7 +632,11 @@ function! s:ApplyEditorConfig(filename, ec_list)
 
     " execute the Vim statments (command otr function call)
     if type(Cmd) == v:t_func
-      call Cmd()
+      try
+        call Cmd()
+      catch /.*/
+        call editorconfig#Warning(property .': Calling ' . string(Cmd) . " failed with: " . v:exception)
+      endtry
     else
       if !empty(Cmd)
         try
