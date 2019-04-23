@@ -11,7 +11,7 @@
 let s:listeners = []
 
 " Register a callback
-function editorconfiglistener#register(func_ref)
+function editorconfiglistener#register(func_ref) abort
   let idx = index(s:listeners, a:func_ref)
   if idx < 0
     call add(s:listeners, a:func_ref)
@@ -19,7 +19,7 @@ function editorconfiglistener#register(func_ref)
 endfunction
 
 " UN-Register a callback
-function editorconfiglistener#unregister(func_ref)
+function editorconfiglistener#unregister(func_ref) abort
   let idx = index(s:listeners, a:func_ref)
   if idx >= 0
     call remove(s:listeners, idx)
@@ -27,7 +27,7 @@ function editorconfiglistener#unregister(func_ref)
 endfunction
 
 " Get the list of registered callbacks
-function editorconfiglistener#get()
+function editorconfiglistener#get() abort
   return s:listeners
 endfunction
 

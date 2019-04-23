@@ -28,7 +28,7 @@ endif
 " Simple for existing files and non existing files in existing directories.
 " More complex for files in none existing directories. This is a real corner
 " case, but at least needed for testing.
-function! s:GetEditorconfigParameter(fn)
+function! s:GetEditorconfigParameter(fn) abort
   if filereadable(a:fn) || isdirectory(fnamemodify(a:fn, ':h'))
     let fn = fnamemodify(a:fn, ':p')
     let dn = fnamemodify(a:fn, ':p:h')
@@ -67,7 +67,7 @@ endfunc
 " - Skip for blacklisted files by name or filetype
 " - Check that a .editorconfig file is available in the current or a parent
 "   dirrectory.
-function! editorconfig_start#CheckAndHandleEditorConfig(force)
+function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
 
   " allow other filename as '.editorconfig' for testing
   " Variable g:editor_config_file is not documented
@@ -89,7 +89,7 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force)
   endif
 
   " project base dirs
-  if exists("g:editor_config_base_dirs")
+  if empty(a:force) && exists("g:editor_config_base_dirs")
     let found = 0
     for basedir in g:editor_config_base_dirs
       if stridx(filename, basedir) == 0
@@ -149,7 +149,7 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force)
   return 0
 endfunction
 
-function editorconfig_start#Apply(force)
+function editorconfig_start#Apply(force) abort
   let rc =  editorconfig_start#CheckAndHandleEditorConfig(a:force)
   if rc == 0
     echo "EditorConfig applied"

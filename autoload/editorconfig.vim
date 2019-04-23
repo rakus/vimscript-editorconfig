@@ -29,7 +29,7 @@ endfunction
 
 " checks hat the value is a integer > 0
 " throws exception if not
-function! s:PositiveInteger(name, value)
+function! s:PositiveInteger(name, value) abort
   if a:value =~ '\d\+'
     let int = str2nr(a:value)
     if int == 0
@@ -42,7 +42,7 @@ function! s:PositiveInteger(name, value)
 endfunction
 
 " Checks that indent_size is either 'tab' or a integer > 0
-function! s:ProcessIndentSize(name, value)
+function! s:ProcessIndentSize(name, value) abort
   if 'tab' == a:value
     return 0
   else
@@ -51,7 +51,7 @@ function! s:ProcessIndentSize(name, value)
 endfunction
 
 " Checks that max_line_length is either 'off' or a integer > 0
-function! s:MaxLineLength(name, value)
+function! s:MaxLineLength(name, value) abort
   if a:value == 'off'
     " TODO: Or return 0?
     return &l:textwidth
@@ -62,7 +62,7 @@ endfunction
 
 " Function to trim trailing whitespaces before saving the file.
 " Called via autocmd, see InstallTrimTrailingSpaces below.
-function! s:TrimTrailingWhiteSpace()
+function! s:TrimTrailingWhiteSpace() abort
   let save_pos = winsaveview()
   try
     keeppattern %s/\s\+$//e
@@ -72,7 +72,7 @@ function! s:TrimTrailingWhiteSpace()
 endfunction
 
 " Install the autocmd to trim trailing whitespaces before save
-function! s:InstallTrimTrailingSpaces(unused)
+function! s:InstallTrimTrailingSpaces(unused) abort
   augroup EditorConfigTrim
     autocmd! * <buffer>
     autocmd BufWritePre <buffer> :call s:TrimTrailingWhiteSpace()
@@ -82,7 +82,7 @@ endfunction
 
 " Validate that the given encoding is supported by Vim
 " If not, throws exception
-function! s:ValidateEncoding(unused, encoding)
+function! s:ValidateEncoding(unused, encoding) abort
   if index(s:enc_names, a:encoding) > -1
     return a:encoding
   endif
@@ -95,7 +95,7 @@ function! s:ValidateEncoding(unused, encoding)
 endfunction
 
 " Sets the file encoding
-function! s:FileEncoding(encoding)
+function! s:FileEncoding(encoding) abort
   let fenc = a:encoding
   if fenc == 'utf-8-bom'
     let fenc = 'utf-8'
@@ -190,22 +190,22 @@ if exists('g:editor_config_config')
 endif
 
 " Add msg to info list
-function! editorconfig#Info(msg)
+function! editorconfig#Info(msg) abort
   call add(b:editor_config, a:msg)
 endfunction
 " Add msg to warning list
-function! editorconfig#Warning(msg)
+function! editorconfig#Warning(msg) abort
   let b:editor_config_status = get(b:, "editor_config_status", "WARNING")
   call add(b:editor_config, "WARNING: " . a:msg)
 endfunction
 " Add msg to warning list
-function! editorconfig#Error(msg)
+function! editorconfig#Error(msg) abort
   let b:editor_config_error = v:true
   let b:editor_config_status = "ERROR"
   call add(b:editor_config, "ERROR: " . a:msg)
 endfunction
 " Add msg to info list, if debug enabled
-function! editorconfig#Debug(msg, ...)
+function! editorconfig#Debug(msg, ...) abort
   if get(g:, 'editor_config_debug', 0) > 0
     " Debug might be called before buffer local vars are created.
     if !exists("b:editor_config")
@@ -216,19 +216,19 @@ function! editorconfig#Debug(msg, ...)
 endfunction
 
 " Add editorconfig file name, section and msg to warning list
-function! s:ParserWarning(ctx, msg)
+function! s:ParserWarning(ctx, msg) abort
   let b:editor_config_status = get(b:, "editor_config_status", "WARNING")
   call add(b:editor_config, "WARNING: " . a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
 endfunction
 " Add editorconfig file name, section and msg to error list
-function! s:ParserError(ctx, msg)
+function! s:ParserError(ctx, msg) abort
   let b:editor_config_status = "ERROR"
   call add(b:editor_config, "ERROR: " . a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
 endfunction
 
 " ctx: Parsing context: filename, section
 " kv: Key-Value-Pair: option name and value
-function s:ProcessOption(ctx, kv)
+function s:ProcessOption(ctx, kv) abort
   let key = a:kv[0]
   let value = a:kv[1]
 
@@ -288,7 +288,7 @@ endfunction
 
 " Creates a regex that matches all integer numbers between lower and upper
 " Note: Numbers are swapped, if lower > upper
-function s:GlobRange2Re(lower, upper)
+function s:GlobRange2Re(lower, upper) abort
   let start = min([a:lower, a:upper])
   let end = max([a:lower, a:upper])
   return '\(' . join(range(start, end), '\|') . '\)'
@@ -317,7 +317,7 @@ else
 endif
 
 " check for matching braces
-function s:checkPairedBraces(str)
+function s:checkPairedBraces(str) abort
     let cnt = 0
     let w = 0
     let [b, i, e] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
@@ -334,7 +334,7 @@ function s:checkPairedBraces(str)
     return cnt == 0
 endfunction
 
-function s:GetCharAtByteIndex(str, index)
+function s:GetCharAtByteIndex(str, index) abort
   " AFAIK maximum length of utf8-char is 4 byte
   let sp = a:str[a:index:(a:index+3)]
   let sp = strpart(a:str, a:index)
@@ -347,11 +347,12 @@ endfunction
 " from https://github.com/editorconfig/editorconfig-core-py
 " Improvements:
 " - handling of escaped chars
-" - detection of / in []
-" - check if {} are paired
+" - better detection of / in []
+" - better check if {} are paired
 " - different handling of number ranges
+" - resulting regex adjusted when win32 detected
 " - check that resulting regex is valid
-function s:GlobToRegEx(pat,...)
+function s:GlobToRegEx(pat,...) abort
 
   let outer = empty(a:000)
 
@@ -491,7 +492,7 @@ endfunction
 let s:LINE_COMMENT = '\(\(\(\\\\\)*\)\@>\\\)\@<![#;]'
 
 " parse the .editorconfig file
-function s:ParseFile(fn)
+function s:ParseFile(fn) abort
   let fqfn = fnamemodify(a:fn, ':p')
 
   let cfg = { 'root': 'false', 'fcfg': [] }
@@ -570,7 +571,7 @@ function s:ParseFile(fn)
 endfunction
 
 " Apply parsed settings to file (buffer)
-function! s:ApplyEditorConfig(filename, ec_list)
+function! s:ApplyEditorConfig(filename, ec_list) abort
   let cmds = {}
   " find properties that should be applied
   for ec in a:ec_list
@@ -666,7 +667,7 @@ function! s:ApplyEditorConfig(filename, ec_list)
 endfunction
 
 " Handle editor config for given filename and the given .editorconfig files.
-function! editorconfig#HandleEditorConfig(filename, ec_files)
+function! editorconfig#HandleEditorConfig(filename, ec_files) abort
 
   " If global function EditorConfigPre exists, call it
   if exists("*EditorConfigPre")
@@ -708,7 +709,7 @@ function! editorconfig#HandleEditorConfig(filename, ec_files)
 endfunction
 
 " print status of editor config for current buffer
-function! editorconfig#EditorConfigStatus()
+function! editorconfig#EditorConfigStatus() abort
   if ! exists("b:editor_config")
     echohl ErrorMsg
     echo "No EditorConfig loaded."
