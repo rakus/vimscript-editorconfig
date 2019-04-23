@@ -1,6 +1,6 @@
 :EditorConfig	editorconfig.txt	/*:EditorConfig*
-EditorConfig-apply	editorconfig.txt	/*EditorConfig-apply*
-EditorConfig-status	editorconfig.txt	/*EditorConfig-status*
+EditorConfigApply	editorconfig.txt	/*EditorConfigApply*
+EditorConfigStatus	editorconfig.txt	/*EditorConfigStatus*
 editorconfig	editorconfig.txt	/*editorconfig*
 editorconfig-cmd	editorconfig.txt	/*editorconfig-cmd*
 editorconfig-customization	editorconfig.txt	/*editorconfig-customization*

@@ -38,12 +38,12 @@ pattern and settings. Like:
 
     [*]
     charset = utf-8
+    indent_size = 4
     insert_final_newline = true
     trim_trailing_whitespace = true
 
     [*.js]
     indent_style = space
-    indent_size = 4
 
     [*.{yml,yaml}]
     indent_style = space
@@ -57,7 +57,8 @@ further files named `.editorconfig`.
 The rest of the file is pretty self explanatory. It is read from top to bottom
 and the properties from matching sections are applied. A property from a later
 section will override those from an earlier section. E.g. all files use UTF-8
-encoding. For Javascript the indent (shiftwidth) is 4, for yaml files 2.
+encoding. For Javascript the indent (shiftwidth) is 4 (inherited from `[*]`),
+for yaml files 2.
 
 Comments
 --------
@@ -88,7 +89,7 @@ Note, that all properties support the special value `unset`. This makes it a
 like `[*]`.
 
 If a property has a invalid value, that property is silently ignored. Use the
-command |:EditorConfig| `status` to display warning messages.
+command |:EditorConfig|Status| to display warning messages.
 
 `indent_style`            Value: `tab`, `space`
                         Defines whether tabs or spaces should be used for
@@ -119,9 +120,7 @@ command |:EditorConfig| `status` to display warning messages.
 
 `charset`                 Value: any charset supported by Vim (see
                         |encoding-values|)
-                        Sets the |'fileencoding'| for the buffers of new files.
-                        For existing files, the file is reloaded with the
-                        given encoding, if Vim detected a different encoding.
+                        Sets the |'fileencoding'| for the file.
                         If the charset is `utf-8-bom` the option |'bomb'| is
                         set.
                         Editorconfig only requires support for a limited set
@@ -173,20 +172,32 @@ might change!
                         applied to the current file. It prints applied
                         settings, warning and error messages.
                         Example output:
+                        Opening a new C file with the following
+                        `.editorconfig`:
+>
+                        [*.c]
+                        charset=utf-8
+                        insert_final_newline=true
+                        indent_style=space
+                        indent_size=4
+                        trim_trailing_whitespace=true
+<
+                        produces following status output:
 >
                         EditorConfig Info:
+                        - WARNING: /.../.editorconfig Section [*.c]: Unsupported option: unsupported = x
                         - setlocal fixendofline
-                        - Set fileencoding to utf-8
-                        - setlocal fileformat=dos
-                        - setlocal noexpandtab
-                        - let &l:shiftwidth = 4
+                        - Changed fileencoding from unset to utf-8
+                        - setlocal expandtab
+                        - setlocal shiftwidth=4 softtabstop=4
                         - Installed autocmd TrimTrailingWhiteSpace
-                        EditorConfig Warnings:
-                        - /dir/.editorconfig Section [*.{c,h}]: Unsupported option: unsupported = x
 <
 
 ==============================================================================
 4. Customization                                  *editorconfig-customization*
+
+WARNING: This plugin is in a early stage, the name of the following variables
+might change!
 
 `g:editor_config_base_dirs`
                         List of directories (absolute names) to be whitelisted
@@ -223,7 +234,7 @@ might change!
 
 `g:editor_config_debug`   Numerical variable. If set, debug messages are added
                         to the editorconfig info and are displayable with
-                        |:EditorConfig| `status`. Higher numbers, mean more debug
+                        |:EditorConfig|Status|. Higher numbers, mean more debug
                         messages.
 
 `EditorConfigPre()`       If a function with this name exists, it is called
@@ -258,12 +269,15 @@ Possible keys in the value dictionary are:
                       Example:
 >
                       function! s:PositiveInteger(name, value)
-                        let int = str2nr(a:value)
-                        if int <= 0
-                          throw "EditorConfig: Invalid " . a:name . ": \""
-                            \ . a:value . "\""
+                        if a:value =~ '\d\+'
+                          let int = str2nr(a:value)
+                          if int == 0
+                            throw "EditorConfig: " . a:name . ": Must not be 0"
+                          endif
+                          return int
+                        else
+                          throw "EditorConfig: Invalid " . a:name . ": \"" . a:value . "\""
                         endif
-                        return int
                       endfunction
 <
                       There are two special return values handled by the
@@ -328,9 +342,28 @@ New property `conceallevel` (see |conceallevel|):
     let g:editor_config_config = {
         \ 'conceallevel': {
         \   'value_process`: funcref('ValidateConceal'),
-        \   'execute': 'setlocal conceallevel=%d'
+        \   'execute': 'setlocal conceallevel={v}'
         \   }
         \ }
+<
+The usage of `value_process` is optional:
+>
+    function SetConceal(value)
+      if a:value =~# '^\d\+$'
+        let i = str2nr(a:value)
+        if i >= 0 && i <= 3
+          let &l:conceallevel = i
+          return
+        endif
+      endif
+      throw "EditorConfig: concellevel invalid: " . a:value
+    endfunction
+
+    let g:editor_config_config = {
+          \ 'conceallevel': {
+          \   'execute': funcref('SetConceal')
+          \   }
+          \ }
 <
 
 To disable the support for a known property, define it with an empty `execute`.
@@ -343,7 +376,7 @@ Support Functions:
 ------------------
 
 Editorconfig provides three functions to add messages to its info or warning
-list. This messages can later be displayed with the |:EditorConfig| `status`
+list. This messages can later be displayed with the |:EditorConfig|Status|
 command.
 
 `editorconfig#Info(msg)`  Adds the given message to the list of info messages.
