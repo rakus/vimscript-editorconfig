@@ -297,6 +297,8 @@ endfunction
 let s:UNESC_LEFT_BRACE = '\(\(\(\\\\\)*\)\@>\\\)\@<!{'
 let s:UNESC_RIGHT_BRACE = '\(\(\(\\\\\)*\)\@>\\\)\@<!}'
 
+let s:UNESC_RIGHT_BRACE_COUNTER = '\(\(\(\\\\\)*\)\@>\\\)\@<![{}]'
+
 let s:UNESC_RIGHT_BRACKET = '\(\(\(\\\\\)*\)\@>\\\)\@<!\]'
 let s:UNESC_SLASH = '\(\(\(\\\\\)*\)\@>\\\)\@<!/'
 
@@ -304,19 +306,6 @@ let s:UNESC_SLASH = '\(\(\(\\\\\)*\)\@>\\\)\@<!/'
 let s:UNESC_COMMA = '\(\(\(\\\\\)*\)\@>\\\)\@<!,'
 " a number range like '1..5' or '-5..+3'
 let s:NUM_RANG = '[-+]\?\d\+\.\.[-+]\?\d\+'
-
-" count matches of regex in string
-function s:countMatch(str, re)
-    let cnt = 0
-    let w = 0
-    let i = match(a:str, a:re, w)
-    while i >= 0
-        let cnt += 1
-        let w = i + 1
-        let i = match(a:str, a:re, w)
-    endwhile
-    return cnt
-endfunction
 
 if has("win32") && !has("win32unix")
   let s:RE_FSEP='[\\/]'
@@ -326,17 +315,41 @@ else
   let s:RE_NOT_FSEP='[^/]'
 endif
 
+" check for matching braces
+function s:checkPairedBraces(str)
+    let cnt = 0
+    let w = 0
+    let [b, i, e] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
+    while i >= 0
+      if b == '{'
+        let cnt += 1
+      elseif b == '}' && cnt > 0
+        let cnt -= 1
+      endif
+      let w = i + 1
+      let [b, i, e] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
+    endwhile
+
+    return cnt == 0
+endfunction
+
 function s:GetCharAtByteIndex(str, index)
   " AFAIK maximum length of utf8-char is 4 byte
   let sp = a:str[a:index:(a:index+3)]
+  let sp = strpart(a:str, a:index)
   let chr = strcharpart(sp, 0, 1)
   return [ chr, (a:index + strlen(chr)) ]
 endfunction
 
 
-" This function is a translation of a python function
+" This function is derived from the python function
 " from https://github.com/editorconfig/editorconfig-core-py
-" plus some extension. e.g. handling `a\*.abc`
+" Improvements:
+" - handling of escaped chars
+" - detection of / in []
+" - check if {} are paired
+" - different handling of number ranges
+" - check that resulting regex is valid
 function s:GlobToRegEx(pat,...)
 
   let outer = empty(a:000)
@@ -349,7 +362,7 @@ function s:GlobToRegEx(pat,...)
   let brace_level = 0
   let in_brackets = v:false
   let re = ''
-  let matching_braces = s:countMatch(a:pat, s:UNESC_LEFT_BRACE) == s:countMatch(a:pat, s:UNESC_RIGHT_BRACE)
+  let matching_braces = s:checkPairedBraces(a:pat)
 
   let loop = 0
   let idx = 0
@@ -370,7 +383,7 @@ function s:GlobToRegEx(pat,...)
         let wlk = idx
         let has_slash = v:false
         let wlk = match(a:pat, s:UNESC_RIGHT_BRACKET, idx)
-        " Why is a escaped slash allowed?
+        " TODO: Why is a escaped slash allowed?
         let slash_idx = match(a:pat, s:UNESC_SLASH, idx)
         let has_slash = slash_idx >= 0 && slash_idx < wlk
         unlet slash_idx
@@ -465,8 +478,8 @@ function s:GlobToRegEx(pat,...)
     call match("", re)
     call editorconfig#Debug("Glob2RE: %s -> %s", a:pat, re)
   catch /.*/
-    editorconfig#Debug("Invalid regex: %s -> %s Exception: %s", a:pat, re, v:exception)
-    editorconfig#Error("Can't translate glob pattern: " . a:pat . " Exception: " . v:exception)
+    call editorconfig#Debug("Invalid regex: %s -> %s Exception: %s", a:pat, re, v:exception)
+    call editorconfig#Error("Can't translate glob pattern: " . a:pat . " Exception: " . v:exception)
     throw "Invalid Glob: Can't translate glob pattern: " . a:pat . " Exception: " . v:exception
   endtry
 
