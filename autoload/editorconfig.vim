@@ -30,11 +30,15 @@ endfunction
 " checks hat the value is a integer > 0
 " throws exception if not
 function! s:PositiveInteger(name, value)
-  let int = str2nr(a:value)
-  if int <= 0
-    throw "EditorConfig: Invalid " . a:name . ": \"" . a:value . "\""
+  if a:value =~ '\d\+'
+    let int = str2nr(a:value)
+    if int == 0
+      throw "EditorConfig: " . a:name . ": Must not be 0"
+    endif
+    return int
+  else
+      throw "EditorConfig: Invalid " . a:name . ": \"" . a:value . "\""
   endif
-  return int
 endfunction
 
 " Checks that indent_size is either 'tab' or a integer > 0
