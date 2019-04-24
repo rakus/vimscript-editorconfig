@@ -1,4 +1,4 @@
-*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 Apr 10
+*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 Apr 24
 
                   EDITOR CONFIG FOR VIM   by Ralf Schandl
 
@@ -6,7 +6,7 @@ Plugin to add editorconfig support to Vim.                      *editorconfig*
 
 
 1. Introduction                              |editorconfig-intro|
-2. Supported Properties                      |editorconfig-cmd|
+2. Supported Properties                      |editorconfig-props|
 3. Commands                                  |editorconfig-cmd|
 4. Customization                             |editorconfig-customization|
 5. Extending Editorconfig                    |editorconfig-extending|
@@ -19,6 +19,7 @@ Editorconfig provides a simple way to configure some basic settings. It is in
 no way comparable with what you can do with your vimrc, but it helps to bring
 some consistency into a code base handled by different programmers with
 different editors.
+
 
 You can read more about editorconfig on http://editorconfig.org and in the
 wiki at https://github.com/editorconfig/editorconfig/wiki.
