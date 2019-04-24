@@ -22,7 +22,7 @@ endfunction
 
 function s:escapeFile(fname)
   if !has("win32") && !has("win32unix")
-    return escape(a:fname, '{')
+    return escape(a:fname, ' {')
   else
     return a:fname
 endfunction
