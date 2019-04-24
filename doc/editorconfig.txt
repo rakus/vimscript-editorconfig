@@ -164,8 +164,8 @@ might change!
                                                            *EditorConfigApply*
 :EditorConfigApply[!]   (Re)Applies editorconfig settings to the current file.
                         If `!` is given, ignores |g:editor_config_blacklist|
-                        and applies the settings to files that normally would
-                        be ignored.
+                        and |g:editor_config_base_dirs| and also applies the
+                        settings to files that normally would be ignored.
 
                                                           *EditorConfigStatus*
 :EditorConfigStatus     This command prints information about the editorconfig
@@ -201,10 +201,10 @@ might change!
 
 `g:editor_config_base_dirs`
                         List of directories (absolute names) to be whitelisted
-			for editorconfig. Only files opened below one of this
-			directories triggers the search for `.editorconfig`
-			files.
-			If empty, always search for `.editorconfig`.
+                        for editorconfig. Only files opened below one of this
+                        directories triggers the search for `.editorconfig`
+                        files.
+                        If empty, always search for `.editorconfig`.
 
 `g:editor_config_blacklist`
                         Prevent applying editorconfig by filetypes or
@@ -215,7 +215,7 @@ might change!
                            'filename': [ '*.tmp', '*.xy' ]
                         }
 <
-                        Note: This case-insensitive.
+                        Note: This is case-insensitive.
 
                         Normally you need a leading `*` to ignore a file.
                         If you want to ignore the file `testcase.txt` you
