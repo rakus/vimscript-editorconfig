@@ -252,36 +252,36 @@ function s:ProcessOption(ctx, kv) abort
     endif
   endif
 
-  let Cmd=""
+  let l:Cmd=""
   if type(cfg.execute) == v:t_dict
     let lc_value = tolower(value)
     if has_key(cfg.execute, lc_value)
-      let Cmd = cfg.execute[lc_value]
+      let l:Cmd = cfg.execute[lc_value]
     else
       call s:ParserError(a:ctx, "Unsupported config value for " . key .": " . value . " (" . lc_value . ")")
       return []
     endif
   else
-    let Cmd = cfg.execute
+    let l:Cmd = cfg.execute
   endif
 
-  if empty(Cmd)
+  if empty(l:Cmd)
     return [ key, '' ]
   else
-    if type(Cmd) == v:t_func
-      let Cmd = funcref(Cmd, [ value])
+    if type(l:Cmd) == v:t_func
+      let l:Cmd = funcref(l:Cmd, [ value])
     else
       try
         " We insert the value in a string, escape backslashes
         let value = escape(value, '\')
-        let Cmd = substitute(Cmd, '{v}', value, 'g')
+        let l:Cmd = substitute(l:Cmd, '{v}', value, 'g')
         " TODO: Escape more characters in property value?
-        let Cmd = substitute(Cmd, '{e}', escape(value, ' |\'), 'g')
+        let l:Cmd = substitute(l:Cmd, '{e}', escape(value, ' |\'), 'g')
       catch /E767:.*/
         "ignored: No format option
       endtry
     endif
-    return [ key, Cmd ]
+    return [ key, l:Cmd ]
   endif
 
 endfunction
@@ -320,7 +320,7 @@ endif
 function s:checkPairedBraces(str) abort
     let cnt = 0
     let w = 0
-    let [b, i, e] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
+    let [b, i, unused] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
     while i >= 0
       if b == '{'
         let cnt += 1
@@ -328,7 +328,7 @@ function s:checkPairedBraces(str) abort
         let cnt -= 1
       endif
       let w = i + 1
-      let [b, i, e] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
+      let [b, i, unused] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
     endwhile
 
     return cnt == 0
@@ -366,7 +366,6 @@ function s:GlobToRegEx(pat,...) abort
   let re = ''
   let matching_braces = s:checkPairedBraces(a:pat)
 
-  let loop = 0
   let idx = 0
   while idx < length
     let [c, idx] = s:GetCharAtByteIndex(a:pat, idx)
@@ -463,7 +462,6 @@ function s:GlobToRegEx(pat,...) abort
       " TODO: Escape c here! Better way?
       let re .= escape(c, '^$[]*.')
     endif
-    let loop += 1
   endwhile
 
   if outer
@@ -481,7 +479,6 @@ function s:GlobToRegEx(pat,...) abort
     call editorconfig#Debug("Glob2RE: %s -> %s", a:pat, re)
   catch /.*/
     call editorconfig#Debug("Invalid regex: %s -> %s Exception: %s", a:pat, re, v:exception)
-    call editorconfig#Error("Can't translate glob pattern: " . a:pat . " Exception: " . v:exception)
     throw "Invalid Glob: Can't translate glob pattern: " . a:pat . " Exception: " . v:exception
   endtry
 
@@ -533,6 +530,7 @@ function s:ParseFile(fn) abort
         try
           let pattern = fqdir_re . s:GlobToRegEx(glob)
         catch /Invalid Glob:.*/
+          call s:ParserError(v:exception)
           call s:ParserWarning(ctx, "Ignoring section with invalid glob")
           let pattern = '__INVALID__'
         endtry
@@ -618,12 +616,12 @@ function! s:ApplyEditorConfig(filename, ec_list) abort
       continue
     endif
 
-    let Cmd = propInfo.cmd
+    let l:Cmd = propInfo.cmd
 
     " inform listeners
-    for Listener in editorconfiglistener#get()
+    for l:Listener in editorconfiglistener#get()
       try
-        call Listener(property, propInfo.value)
+        call l:Listener(property, propInfo.value)
       catch /.*/
         " hook threw exception -- unregister it
         echomsg "Deregistering hook " . string(Listener) ." after exception \"" . v:exception . "\""
@@ -631,20 +629,20 @@ function! s:ApplyEditorConfig(filename, ec_list) abort
       endtry
     endfor
 
-    " execute the Vim statments (command otr function call)
-    if type(Cmd) == v:t_func
+    " execute the Vim statments (command or function call)
+    if type(l:Cmd) == v:t_func
       try
-        call Cmd()
+        call l:Cmd()
       catch /.*/
-        call editorconfig#Warning(property .': Calling ' . string(Cmd) . " failed with: " . v:exception)
+        call editorconfig#Warning(property .': Calling ' . string(l:Cmd) . " failed with: " . v:exception)
       endtry
     else
-      if !empty(Cmd)
+      if !empty(l:Cmd)
         try
-          execute(Cmd)
-          call editorconfig#Info(Cmd)
+          execute(l:Cmd)
+          call editorconfig#Info(l:Cmd)
         catch /.*/
-          call editorconfig#Warning(property .': ' . Cmd . " Failed with: " . v:exception)
+          call editorconfig#Warning(property .': ' . l:Cmd . " Failed with: " . v:exception)
         endtry
       endif
     endif
