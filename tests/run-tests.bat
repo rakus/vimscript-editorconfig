@@ -19,6 +19,7 @@ if NOT EXIST %LOG_DIR% (
     mkdir %LOG_DIR%
 )
 
+cd %SCRIPTDIR%
 
 call :RunVim testset-editorconfig-core-filetree.vim      editorconfig-core-test\filetree
 call :RunVim testset-editorconfig-core-glob.vim          editorconfig-core-test\glob

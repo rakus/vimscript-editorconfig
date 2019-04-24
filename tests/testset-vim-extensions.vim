@@ -72,20 +72,31 @@ let s:test_desc['name-linebreak'] = { 'file': "test\\\ncase.abc", 'expect': { '&
 " test filename with line break
 let s:test_desc['name-linebreak2'] = { 'file': "test\\\ncase.abd", 'expect': { '&tabstop': 18 }}
 
-" test filename with asterisk (*)
-let s:test_desc['name-asterisk'] = { 'file': 'a\*.abc', 'expect': { '&tabstop': 19 }}
+" Windows doesn't allow '*' or '?' in file names
+if !has('win32')
+  " test filename with asterisk (*)
+  let s:test_desc['name-asterisk'] = { 'file': 'a\*.abc', 'expect': { '&tabstop': 19 }}
 
-" test filename with question mark
-let s:test_desc['name-question'] = { 'file': 'a\?.abc', 'expect': { '&tabstop': 20 }}
+  " test filename with question mark
+  let s:test_desc['name-question'] = { 'file': 'a\?.abc', 'expect': { '&tabstop': 20 }}
+endif
 
 " test filename with right square bracket
 let s:test_desc['name-right-square'] = { 'file': 'a[.abc', 'expect': { '&tabstop': 21 }}
 
-" test filename with right curly bracket
-let s:test_desc['name-right-curly'] = { 'file': 'a\{.abc', 'expect': { '&tabstop': 22 }}
+if has('win32') && !has('win32unix')
+  " test filename with right curly bracket
+  let s:test_desc['name-right-curly'] = { 'file': 'a{.abc', 'expect': { '&tabstop': 22 }}
 
-" test filename with right curly bracket 2
-let s:test_desc['name-right-curly'] = { 'file': 'b\{.abc', 'expect': { '&tabstop': 23 }}
+  " test filename with right curly bracket 2
+  let s:test_desc['name-right-curly'] = { 'file': 'b{.abc', 'expect': { '&tabstop': 23 }}
+else
+  " test filename with right curly bracket
+  let s:test_desc['name-right-curly'] = { 'file': 'a\{.abc', 'expect': { '&tabstop': 22 }}
+
+  " test filename with right curly bracket 2
+  let s:test_desc['name-right-curly'] = { 'file': 'b\{.abc', 'expect': { '&tabstop': 23 }}
+endif
 
 " test filename with right curly bracket 2
 let s:test_desc['slash-after-escaped-bracket'] = { 'file': 'ab[c]/]d', 'expect': { '&tabstop': 24 }}
@@ -98,4 +109,4 @@ if 0 != RunTestSet("vim-extensions", s:test_desc)
 else
   quit!
 endif
-
+testset-vim-extensions.vim
