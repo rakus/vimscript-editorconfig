@@ -119,7 +119,7 @@ call New_ec_test("unset_trim_trailing_whitespace", "unset.in", "unset/trim_trail
 
 execute "lcd " . s:TEST_FILE_DIR
 let g:TEST_COMPARE = 'regex'
-if 0 != RunTestSet("editorconfig-core-properties", g:test_desc)
+if 0 != RunTestSet("editorconfig-core-filetree", g:test_desc)
   cq!
 else
   quit!
