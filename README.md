@@ -1,5 +1,8 @@
 
 [![Build Status](https://www.travis-ci.org/rakus/vimscript-editorconfig.svg?branch=master)](https://www.travis-ci.org/rakus/vimscript-editorconfig)
+[![Build status](https://ci.appveyor.com/api/projects/status/p2w1cqxauntyexhg/branch/master?svg=true)](https://ci.appveyor.com/project/rakus/vimscript-editorconfig/branch/master)
+
+
 
 # VimScript-EditorConfig
 
