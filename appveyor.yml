@@ -1,0 +1,19 @@
+
+image:
+  - Visual Studio 2013
+
+
+install:
+  - git submodule update --init --recursive
+  - cmd: call .\tests\tools\appveyor-vim-download.bat
+  - cmd: call .\tests\tools\appveyor-neovim-download.bat
+
+
+build_script:
+  - cmd: set VIM=%temp%\vim
+  - cmd: set VIM_EXE_DIR=%temp%\vim\vim81
+  - cmd: echo "VIM_EXE_DIR %VIM_EXE_DIR%"
+  - cmd: echo "VIM_DIR %VIM%"
+
+test_script:
+  - cmd: .\tests\run-tests.bat

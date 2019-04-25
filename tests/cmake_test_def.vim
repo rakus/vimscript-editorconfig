@@ -24,5 +24,6 @@ function s:escapeFile(fname)
   if !has("win32") && !has("win32unix")
     return escape(a:fname, ' {')
   else
-    return a:fname
+    return escape(a:fname, ' ')
+  endif
 endfunction
