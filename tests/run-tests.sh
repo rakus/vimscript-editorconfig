@@ -51,9 +51,9 @@ run_single_test()
     rm -f "$TEST_RESULT_FILE"
 
     if [ -n "$verbose" ]; then
-        "$@" --clean -u test_vimrc --noplugin -N -c "source $testfile" #>/dev/null
+        "$@" --clean -u $script_dir/test_vimrc --noplugin -N -c "source $testfile" #>/dev/null
     else
-        "$@" --clean -u test_vimrc --noplugin -N -c "source $testfile" >/dev/null
+        "$@" --clean -u $script_dir/test_vimrc --noplugin -N -c "source $testfile" >/dev/null
     fi
     if [ $? -ne 0 ]; then
         exit_code=1

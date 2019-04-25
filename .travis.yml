@@ -4,9 +4,13 @@ dist: xenial
 sudo: required
 
 before_install:
-  - sudo add-apt-repository ppa:jonathonf/vim -y
-  - sudo apt-get update
-  - sudo apt-get install -y xvfb vim-gtk3
+  - export VIM_TST_EXE="/tmp/vim.appimage"
+  - 'export VIM_APPIMAGE_URL="$(curl -H "Authorization: token $API_TOKEN" -s https://api.github.com/repos/vim/vim-appimage/releases/latest | grep -o "https://github.com/vim/vim-appimage/releases/download/v.*/GVim-v.*x86_64.AppImage")"'
+  - echo "$VIM_APPIMAGE_URL"
+  - curl -L -o "$VIM_TST_EXE" "$VIM_APPIMAGE_URL"
+  - chmod +x "$VIM_TST_EXE"
+  - ls -l "$VIM_TST_EXE"
+  - file "$VIM_TST_EXE"
   - export NEOVIM_TST_EXE=/tmp/nvim.appimage
   - curl -L -o "$NEOVIM_TST_EXE" https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage
   - chmod +x "$NEOVIM_TST_EXE"
@@ -14,7 +18,7 @@ before_install:
 before_script:
   - export DISPLAY=':99.0'
   - Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-  - vim --version
+  - $VIM_TST_EXE --version 2>/dev/tty
   - $NEOVIM_TST_EXE --version
 
 script:

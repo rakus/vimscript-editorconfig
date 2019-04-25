@@ -4,6 +4,15 @@
 
 set encoding=utf-8
 
+if !has("nvim") && exists("$APPIMAGE")
+  let base = $APPDIR . '/usr/'
+  let $VIM = substitute($VIM, '\./\.//', base , 'g')
+  let &rtp = substitute(&rtp, '\./\.//', base , 'g')
+  let &helpfile = substitute(&helpfile, '\./\.//', base , 'g')
+  let &packpath = substitute(&packpath, '\./\.//', base , 'g')
+  cd $PWD
+endif
+
 filetype plugin indent on
 
 execute "set rtp+=" . fnamemodify(expand("<sfile>:p"), ":p:h:h")
