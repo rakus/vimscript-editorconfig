@@ -20,7 +20,7 @@ if NOT "X%APPVEYOR%" == "X" (
         call %temp%\VIM_ENV.bat
     )
     if EXIST %temp%\NEOVIM_ENV.bat (
-        echo Calling %temp%\VIM_ENV.bat
+        echo Calling %temp%\NEOVIM_ENV.bat
         call %temp%\NEOVIM_ENV.bat
     )
     echo VIM - %VIM%
