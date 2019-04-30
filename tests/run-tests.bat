@@ -37,7 +37,6 @@ if "X%NEOVIM_EXE_DIR%" == "X" (
     set NEOVIM_EXE_DIR=%userprofile%\local\Neovim\bin
 )
 
-
 set LOG_DIR=%SCRIPTDIR%\logs
 if NOT EXIST %LOG_DIR% (
     mkdir %LOG_DIR%
@@ -49,12 +48,9 @@ cd %SCRIPTDIR%
 set TEST_EXIT=0
 if EXIST "%VIM_EXE_DIR%\%VIM_EXE%" (
     echo "Testing Vim (%VIM_EXE_DIR%\%VIM_EXE%)"
-    call :RunVim testset-editorconfig-core-filetree.vim
-    call :RunVim testset-editorconfig-core-glob.vim
-    call :RunVim testset-editorconfig-core-parser.vim
-    call :RunVim testset-editorconfig-core-properties.vim
-    call :RunVim testset-editorconfig-plugin.vim
-    call :RunVim testset-vim-extensions.vim
+    for /R %SCRIPTDIR% %%t in (testset-*.vim) do (
+	call :RunVim %%~nxt
+    )
 ) else (
     echo "Vim not found (%VIM_EXE_DIR%\%VIM_EXE%)"
 )
@@ -62,12 +58,9 @@ echo.
 if EXIST "%NEOVIM_EXE_DIR%\%NEOVIM_EXE%" (
     echo "Testing NeoVim (%NEOVIM_EXE_DIR%\%NEOVIM_EXE%)"
     set VIM=
-    call :RunNeoVim testset-editorconfig-core-filetree.vim
-    call :RunNeoVim testset-editorconfig-core-glob.vim
-    call :RunNeoVim testset-editorconfig-core-parser.vim
-    call :RunNeoVim testset-editorconfig-core-properties.vim
-    call :RunNeoVim testset-editorconfig-plugin.vim
-    call :RunNeoVim testset-vim-extensions.vim
+    for /R %SCRIPTDIR% %%t in (testset-*.vim) do (
+	call :RunNeoVim %%~nxt
+    )
 ) else (
     echo "Neovim not found (%NEOVIM_EXE_DIR%\%NEOVIM_EXE%)"
 )
