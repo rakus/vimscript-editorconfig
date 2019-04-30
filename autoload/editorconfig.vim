@@ -316,22 +316,25 @@ else
   let s:RE_NOT_FSEP='[^/]'
 endif
 
-" check for matching braces
-function s:checkPairedBraces(str) abort
-    let cnt = 0
-    let w = 0
-    let [b, i, unused] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
-    while i >= 0
-      if b == '{'
-        let cnt += 1
-      elseif b == '}' && cnt > 0
-        let cnt -= 1
+" check if braces are paired
+function s:checkPairedBraces(str)
+  let list = []
+  let w = 0
+  let [b, i, e] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
+  while i >= 0
+    if b == '{'
+      call insert(list, b, 0)
+    elseif b == '}'
+      if len(list) == 0
+        return v:false
+      elseif remove(list, 0) != '{'
+        return v:false
       endif
-      let w = i + 1
-      let [b, i, unused] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
-    endwhile
-
-    return cnt == 0
+    endif
+    let w = i + 1
+    let [b, i, e] = matchstrpos(a:str, s:UNESC_RIGHT_BRACE_COUNTER, w)
+  endwhile
+  return len(list) == 0 ? v:true : v:false
 endfunction
 
 function s:GetCharAtByteIndex(str, index) abort
