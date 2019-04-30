@@ -86,13 +86,13 @@ let s:test_desc['name-right-square'] = { 'file': 'a[.abc', 'expect': { '&tabstop
 
 if has('win32') && !has('win32unix')
   " test filename with right curly bracket
-  let s:test_desc['name-right-curly'] = { 'file': 'a{.abc', 'expect': { '&tabstop': 22 }}
+  let s:test_desc['name-right-curly-escaped'] = { 'file': 'a{.abc', 'expect': { '&tabstop': 22 }}
 
   " test filename with right curly bracket 2
   let s:test_desc['name-right-curly'] = { 'file': 'b{.abc', 'expect': { '&tabstop': 23 }}
 else
   " test filename with right curly bracket
-  let s:test_desc['name-right-curly'] = { 'file': 'a\{.abc', 'expect': { '&tabstop': 22 }}
+  let s:test_desc['name-right-curly-escaped'] = { 'file': 'a\{.abc', 'expect': { '&tabstop': 22 }}
 
   " test filename with right curly bracket 2
   let s:test_desc['name-right-curly'] = { 'file': 'b\{.abc', 'expect': { '&tabstop': 23 }}
