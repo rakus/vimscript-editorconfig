@@ -98,10 +98,13 @@ else
   let s:test_desc['name-right-curly'] = { 'file': 'b\{.abc', 'expect': { '&tabstop': 23 }}
 endif
 
-" test filename with right curly bracket 2
 let s:test_desc['slash-after-escaped-bracket'] = { 'file': 'ab[c]/]d', 'expect': { '&tabstop': 24 }}
 
-
+if has('win32') && !has('win32unix')
+  let s:test_desc['braces-back-to-back'] = { 'file': '}test{.txt', 'expect': { '&tabstop': 25 }}
+else
+  let s:test_desc['braces-back-to-back'] = { 'file': '\}test\{.txt', 'expect': { '&tabstop': 25 }}
+endif
 
 execute "cd " . s:TEST_FILE_DIR
 if 0 != RunTestSet("vim-extensions", s:test_desc)

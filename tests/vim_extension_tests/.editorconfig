@@ -79,4 +79,7 @@ tab_width=23
 [ab[c\]/]d]
 tab_width=24
 
+; Slash after escaped close bracket
+[}test{.txt]
+tab_width=25
 
