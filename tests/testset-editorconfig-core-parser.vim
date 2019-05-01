@@ -166,7 +166,7 @@ call New_ec_test("max_section_name_ok", "limits.in", "test3", '^key=value[ \t\n\
 "call New_ec_test("max_section_name_ignore", "limits.in", "test4", '^[ \t\n\r]*$')
 
 
-execute "lcd " . s:TEST_FILE_DIR
+execute "cd " . s:TEST_FILE_DIR
 let g:TEST_COMPARE = 'regex'
 if 0 != RunTestSet("editorconfig-core-parser", g:test_desc)
   cq!

@@ -274,7 +274,7 @@ call New_ec_test("star_star_over_separator22", "star_star.in", "dm/nz.c", '^[ \t
 call New_ec_test("star_star_over_separator23", "star_star.in", "d/mnz.c", '^[ \t\n\r]*$')
 call New_ec_test("star_star_over_separator24", "star_star.in", "dmn/z.c", '^[ \t\n\r]*$')
 
-execute "lcd " . s:TEST_FILE_DIR
+execute "cd " . s:TEST_FILE_DIR
 let g:TEST_COMPARE = 'regex'
 if 0 != RunTestSet("editorconfig-core-glob", g:test_desc)
   cq!
