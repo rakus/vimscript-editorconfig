@@ -93,14 +93,17 @@ endfunction
 
 function s:GlobRange2Re(lower, upper) abort
 
-  let start = min([a:lower, a:upper])
-  let end = max([a:lower, a:upper])
+  let low_num = str2nr(a:lower, 10)
+  let up_num = str2nr(a:upper, 10)
+
+  let start = min([low_num, up_num])
+  let end = max([low_num, up_num])
   let neg=''
   if start < 0
     let new_start = end < 0 ? -end : 0
     let new_end = start * -1
     let result = s:numRangeRegexParts(new_start, new_end, '')
-    let neg =  '-' . join(result, '\|-')
+    let neg =  '-\%(' . join(result, '\|') . '\)'
     if end < 0
       return '\%(' . neg . '\)'
     else
@@ -110,7 +113,7 @@ function s:GlobRange2Re(lower, upper) abort
   endif
   let result = s:numRangeRegexParts(start, end, '')
 
-  return '\%(' . neg . '+\?' . join(result, '\|+\?') . '\)'
+  return '\%(' . neg . '+\?\%(' . join(result, '\|') . '\)\)'
 
 endfunction
 
@@ -226,7 +229,7 @@ function s:GlobToRegExInt(pat,type) abort
             let partStr = join(a:pat[idx:(wlk-1)], '')
             let num_range = matchstr(partStr, s:NUM_RANG)
             if !empty(num_range)
-              let bounds = eval(substitute(num_range, '^\([-+]\?\d\+\)\.\.\([-+]\?\d\+\)$', "[ \\1, \\2 ]", ''))
+              let bounds = eval(substitute(num_range, '^\([-+]\?\d\+\)\.\.\([-+]\?\d\+\)$', "[ '\\1', '\\2' ]", ''))
               let re .= s:GlobRange2Re(bounds[0], bounds[1])
             else
               let inner = s:GlobToRegExInt(a:pat[idx:(wlk-1)], s:g2rNormal)
