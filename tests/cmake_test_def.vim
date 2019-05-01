@@ -4,6 +4,9 @@ if !exists("g:SkipTestOnWindows")
 endif
 
 function New_ec_test(name, ec_file, file, regex)
+  if has_key(g:test_desc, a:name)
+      call add(v:errors, 'Duplicate test ID: ' . a:name)
+  endif
   if has("win32") && !has("win32unix") && index(g:SkipTestOnWindows, a:name) >= 0
     return
   endif
@@ -12,6 +15,9 @@ function New_ec_test(name, ec_file, file, regex)
 endfunction
 
 function New_ec_test_multiline(name, ec_file, file, regex)
+  if has_key(g:test_desc, a:name)
+      call add(v:errors, 'Duplicate test ID: ' . a:name)
+  endif
   if has("win32") && !has("win32unix") && index(g:SkipTestOnWindows, a:name) >= 0
     return
   endif
