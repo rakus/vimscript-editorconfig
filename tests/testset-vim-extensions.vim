@@ -28,82 +28,89 @@ let g:editor_config_blacklist = {
       \ 'filename': [ 'ignore_by_name.txt', '*.xyz' ]
       \ }
 
-
 let s:test_desc = {}
+
+function s:addTest(name, desc) abort
+  if has_key(s:test_desc, a:name)
+      call add(v:errors, 'Duplicate test ID: ' . a:name)
+  endif
+  let s:test_desc[a:name] = a:desc
+endfunction
+
 " test vim extensions "spell_lang" & "spell_check"
-let s:test_desc['de_de.txt'] = { 'file': 'de_de.txt', 'expect': { '&spelllang': 'de_de', '&spell': 1 }}
+call s:addTest('de_de.txt', { 'file': 'de_de.txt', 'expect': { '&spelllang': 'de_de', '&spell': 1 }})
 
 " test blacklist by filename
-let s:test_desc['ignore_by_name.txt'] = { 'file': 'ignore_by_name.txt', 'expect': { '&tabstop != 11': 1 }}
+call s:addTest('ignore_by_name.txt', { 'file': 'ignore_by_name.txt', 'expect': { '&tabstop != 11': 1 }})
 " test blacklist by filename
-let s:test_desc['ignore_by_wildcard_name'] = { 'file': 'test.xyz', 'expect': { '&tabstop != 12': 1 }}
+call s:addTest('ignore_by_wildcard_name', { 'file': 'test.xyz', 'expect': { '&tabstop != 12': 1 }})
 " test blacklist by filetyp
-let s:test_desc['ignore_by_filetype.c'] = { 'file': 'ignore_by_filetype.c', 'expect': { '&tabstop != 13': 1 }}
+call s:addTest('ignore_by_filetype.c', { 'file': 'ignore_by_filetype.c', 'expect': { '&tabstop != 13': 1 }})
 " test blacklist by filetyp glob expression
-let s:test_desc['ignore-ft-markdown'] = { 'file': 'ignored.md', 'expect': { '&tabstop != 14': 1 }}
+call s:addTest('ignore-ft-markdown', { 'file': 'ignored.md', 'expect': { '&tabstop != 14': 1 }})
 
 " test file with leading dot is detected
-let s:test_desc['file-leading-dot'] = { 'file': '.vimrc', 'expect': { '&tabstop': 15 }}
+call s:addTest('file-leading-dot', { 'file': '.vimrc', 'expect': { '&tabstop': 15 }})
 
 " test backslashes in property value setting value `set` command
-let s:test_desc['escape_test'] = { 'file': 'escape_test.txt', 'expect': { '&directory': 'f:\not-there\also-not-there,.' }}
+call s:addTest('escape_test', { 'file': 'escape_test.txt', 'expect': { '&directory': 'f:\not-there\also-not-there,.' }})
 
 " test backslashes in property value setting value via funcref
-let s:test_desc['escape_test2'] = { 'file': 'escape_test2.txt', 'expect': { '&directory': 'f:\not-there\also-not-there,.' }}
+call s:addTest('escape_test2', { 'file': 'escape_test2.txt', 'expect': { '&directory': 'f:\not-there\also-not-there,.' }})
 
 " test var assignment single quotes
-let s:test_desc['buffer_local_var_single'] = { 'file': 'buffer_local_var.txt', 'expect': { 'b:buflocal': 'test\case' }}
+call s:addTest('buffer_local_var_single', { 'file': 'buffer_local_var.txt', 'expect': { 'b:buflocal': 'test\case' }})
 
 " test var assignment double quotes
-let s:test_desc['buffer_local_var_double'] = { 'file': 'buffer_local_var2.txt', 'expect': { 'b:buflocal': 'case\test' }}
+call s:addTest('buffer_local_var_double', { 'file': 'buffer_local_var2.txt', 'expect': { 'b:buflocal': 'case\test' }})
 
 " test multibyte in glob choice
-let s:test_desc['multibyte-glob-choice'] = { 'file': 'multibyte-choice.中', 'expect': { 'b:buflocal': 'multibyte-choice' }}
+call s:addTest('multibyte-glob-choice', { 'file': 'multibyte-choice.中', 'expect': { 'b:buflocal': 'multibyte-choice' }})
 
 " test multibyte in glob choice
-let s:test_desc['multibyte-glob-collection'] = { 'file': 'multibyte-collection.中', 'expect': { 'b:buflocal': 'multibyte-collection' }}
+call s:addTest('multibyte-glob-collection', { 'file': 'multibyte-collection.中', 'expect': { 'b:buflocal': 'multibyte-collection' }})
 
 " test dot is correctly escaped in glob2re
-let s:test_desc['dot-escaped'] = { 'file': 'dot_c', 'expect': { '&tabstop != 16': 1 }}
+call s:addTest('dot-escaped', { 'file': 'dot_c', 'expect': { '&tabstop != 16': 1 }})
 
 " test filename with line break
-let s:test_desc['name-linebreak'] = { 'file': "test\\\ncase.abc", 'expect': { '&tabstop': 17 }}
+call s:addTest('name-linebreak', { 'file': "test\\\ncase.abc", 'expect': { '&tabstop': 17 }})
 
 " test filename with line break
-let s:test_desc['name-linebreak2'] = { 'file': "test\\\ncase.abd", 'expect': { '&tabstop': 18 }}
+call s:addTest('name-linebreak2', { 'file': "test\\\ncase.abd", 'expect': { '&tabstop': 18 }})
 
 " Windows doesn't allow '*' or '?' in file names
 if !has('win32')
   " test filename with asterisk (*)
-  let s:test_desc['name-asterisk'] = { 'file': 'a\*.abc', 'expect': { '&tabstop': 19 }}
+  call s:addTest('name-asterisk', { 'file': 'a\*.abc', 'expect': { '&tabstop': 19 }})
 
   " test filename with question mark
-  let s:test_desc['name-question'] = { 'file': 'a\?.abc', 'expect': { '&tabstop': 20 }}
+  call s:addTest('name-question', { 'file': 'a\?.abc', 'expect': { '&tabstop': 20 }})
 endif
 
 " test filename with right square bracket
-let s:test_desc['name-right-square'] = { 'file': 'a[.abc', 'expect': { '&tabstop': 21 }}
+call s:addTest('name-right-square', { 'file': 'a[.abc', 'expect': { '&tabstop': 21 }})
 
 if has('win32') && !has('win32unix')
   " test filename with right curly bracket
-  let s:test_desc['name-right-curly-escaped'] = { 'file': 'a{.abc', 'expect': { '&tabstop': 22 }}
+  call s:addTest('name-right-curly-escaped', { 'file': 'a{.abc', 'expect': { '&tabstop': 22 }})
 
   " test filename with right curly bracket 2
-  let s:test_desc['name-right-curly'] = { 'file': 'b{.abc', 'expect': { '&tabstop': 23 }}
+  call s:addTest('name-right-curly', { 'file': 'b{.abc', 'expect': { '&tabstop': 23 }})
 else
   " test filename with right curly bracket
-  let s:test_desc['name-right-curly-escaped'] = { 'file': 'a\{.abc', 'expect': { '&tabstop': 22 }}
+  call s:addTest('name-right-curly-escaped', { 'file': 'a\{.abc', 'expect': { '&tabstop': 22 }})
 
   " test filename with right curly bracket 2
-  let s:test_desc['name-right-curly'] = { 'file': 'b\{.abc', 'expect': { '&tabstop': 23 }}
+  call s:addTest('name-right-curly', { 'file': 'b\{.abc', 'expect': { '&tabstop': 23 }})
 endif
 
-let s:test_desc['slash-after-escaped-bracket'] = { 'file': 'ab[c]/]d', 'expect': { '&tabstop': 24 }}
+call s:addTest('slash-after-escaped-bracket', { 'file': 'ab[c]/]d', 'expect': { '&tabstop': 24 }})
 
 if has('win32') && !has('win32unix')
-  let s:test_desc['braces-back-to-back'] = { 'file': '}test{.txt', 'expect': { '&tabstop': 25 }}
+  call s:addTest('braces-back-to-back', { 'file': '}test{.txt', 'expect': { '&tabstop': 25 }})
 else
-  let s:test_desc['braces-back-to-back'] = { 'file': '\}test\{.txt', 'expect': { '&tabstop': 25 }}
+  call s:addTest('braces-back-to-back', { 'file': '\}test\{.txt', 'expect': { '&tabstop': 25 }})
 endif
 
 execute "cd " . s:TEST_FILE_DIR

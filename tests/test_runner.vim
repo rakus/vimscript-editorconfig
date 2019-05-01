@@ -49,6 +49,9 @@ endfunction
 function! RunTestSet(name, tests)
 
   let all_errors = []
+  if !empty(v:errors)
+      call add(all_errors, ['GLOBAL', v:errors])
+  endif
 
   let tst_count = 0
   let tst_fail = 0
