@@ -47,7 +47,7 @@ let s:test_desc['without_newline.txt'] =  { 'file': 'without_newline.txt', 'expe
 let s:test_desc['trim.txt'] = { 'file': 'trim.txt', 'expect': { 'match(execute("autocmd EditorConfigTrim"), "TrimTrailingWhiteSpace")>=0': 1 }}
 let s:test_desc['no_trim.txt'] = { 'file': 'no_trim.txt', 'expect': { 'match(execute("autocmd EditorConfigTrim"), "TrimTrailingWhiteSpace")>=0': 0 }}
 
-execute "lcd " . s:TEST_FILE_DIR
+execute "cd " . s:TEST_FILE_DIR
 if 0 != RunTestSet("editorconfig-plugin", s:test_desc)
   cq!
 else

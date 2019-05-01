@@ -89,7 +89,7 @@ call s:addTest('lowercase_values3', { 'ec_file': 'lowercase_values.in', 'file': 
 call s:addTest('lowercase_names', { 'ec_file': 'lowercase_names.in', 'file': 'test.c',
       \ 'expect': { 'g:ecTestResultDict["testproperty"]': 'testvalue' }})
 
-execute "lcd " . s:TEST_FILE_DIR
+execute "cd " . s:TEST_FILE_DIR
 "let g:TEST_COMPARE = 'regex'
 if 0 != RunTestSet("editorconfig-core-properties", s:test_desc)
   cq!

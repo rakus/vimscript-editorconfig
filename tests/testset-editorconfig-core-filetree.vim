@@ -117,7 +117,7 @@ call New_ec_test("unset_insert_final_newline", "unset.in", "unset/insert_final_n
 call New_ec_test("unset_tab_width", "unset.in", "unset/tab_width.txt", '^$')
 call New_ec_test("unset_trim_trailing_whitespace", "unset.in", "unset/trim_trailing_whitespace.txt", '^$')
 
-execute "lcd " . s:TEST_FILE_DIR
+execute "cd " . s:TEST_FILE_DIR
 let g:TEST_COMPARE = 'regex'
 if 0 != RunTestSet("editorconfig-core-filetree", g:test_desc)
   cq!
