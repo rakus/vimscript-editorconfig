@@ -83,3 +83,15 @@ tab_width=24
 [}test{.txt]
 tab_width=25
 
+[number_{0..85}.num]
+tab_width=26
+
+[neg_number_{-85..0}.num]
+tab_width=27
+
+[both_number_{-85..85}.num]
+tab_width=27
+
+[oct_number_{010..020}.num]
+tab_width=28
+
