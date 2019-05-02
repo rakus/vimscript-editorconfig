@@ -30,7 +30,7 @@ endfunction
 " checks hat the value is a integer > 0
 " throws exception if not
 function! s:PositiveInteger(name, value) abort
-  if a:value =~ '\d\+'
+  if a:value =~ '^\d\+$'
     let int = str2nr(a:value)
     if int == 0
       throw "EditorConfig: " . a:name . ": Must not be 0"
