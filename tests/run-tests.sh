@@ -9,7 +9,9 @@ script_dir="$(cd "$(dirname "$0")" && pwd)"
 
 cd "$script_dir" || exit 1
 
-if [ -d "$HOME/local/neovim/bin" ]; then
+[ "$OSTYPE" = "cygwin" ] && is_cygwin="true"
+
+if [ -z "$is_cygwin" ] && [ -d "$HOME/local/neovim/bin" ]; then
     PATH="$PATH:$HOME/local/neovim/bin"
 fi
 
@@ -91,7 +93,7 @@ else
 fi
 
 # don't run nvim in verbose mode
-if [ -z "$verbose" ]; then
+if  [ -z "$is_cygwin" ] && [ -z "$verbose" ]; then
     if command -v "$NEOVIM_TST_EXE" >/dev/null 2>&1; then
         echo "Testing nvim ($(command -v "$NEOVIM_TST_EXE"))"
         run_tests "$NEOVIM_TST_EXE" --headless
