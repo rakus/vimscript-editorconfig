@@ -27,7 +27,7 @@ function New_ec_test_multiline(name, ec_file, file, regex)
 endfunction
 
 function s:escapeFile(fname)
-  if !has("win32") && !has("win32unix")
+  if !has("win32")
     return escape(a:fname, ' {')
   else
     return escape(a:fname, ' ')
