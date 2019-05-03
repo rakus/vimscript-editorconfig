@@ -24,6 +24,10 @@ before_script:
 script:
   - tests/run-tests.sh
 
+after_script:
+  # workaround for truncated output
+  - sleep 10
+
 notifications:
   email:
     on_success: change
