@@ -24,13 +24,13 @@ function s:appendToVar(varname, value) abort
 endfunction
 
 " Global variable g:ecTestResultDict defined in test_runner.vim
-let g:editor_config_config = {
+let g:editorconfig_config = {
       \ 'trim_trailing_whitespace': funcref("s:appendToVar", [ "b:trim_trailing_whitespace" ]),
       \ 'test_property':            funcref("s:appendToVar", [ "g:ecTestResultDict[\"test_property\"]" ]),
       \ 'testproperty':             funcref("s:appendToVar", [ "g:ecTestResultDict[\"testproperty\"]" ])
       \ }
 
-let g:editor_config_debug = 3
+let g:editorconfig_debug = 3
 runtime plugin/editorconfig.vim
 
 execute "source " . escape(TEST_DIR, ' \')  . "/test_runner.vim"

@@ -11,11 +11,11 @@ endif
 function! s:run_test(name, spec)
   let g:ecTestResult = ""
   let g:ecTestResultDict = {}
-  let g:editor_config_info = []
+  let g:editorconfig_info = []
   call editorconfig#ClearCache()
 
   if has_key(a:spec, "ec_file")
-    let g:editor_config_file = a:spec.ec_file
+    let g:editorconfig_file = a:spec.ec_file
   endif
 
   try
@@ -40,7 +40,7 @@ function! s:run_test(name, spec)
       endif
     endfor
   finally
-    call extend(g:editor_config_info, split(execute('EditorConfigStatus'), "\n"))
+    call extend(g:editorconfig_info, split(execute('EditorConfigStatus'), "\n"))
     bwipeout!
   endtry
 endfunction
@@ -69,7 +69,7 @@ function! RunTestSet(name, tests)
     if !empty(v:errors)
       let tst_fail += 1
       let msgs = copy(v:errors)
-      call extend(msgs, g:editor_config_info)
+      call extend(msgs, g:editorconfig_info)
       call add(all_errors, [ name, msgs])
     endif
   endfor
