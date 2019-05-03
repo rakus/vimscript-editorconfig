@@ -5,6 +5,14 @@ root=true
 spell_lang = de_de
 spell_check = true
 
+# check error message for invalid indent_size
+[inv_shift_width.txt]
+indent_size=-2
+
+# check warning for unknown option
+[unknown.txt]
+unsupported=true
+
 # blacklisted by full name
 [ignore_by_name.txt]
 tab_width=11

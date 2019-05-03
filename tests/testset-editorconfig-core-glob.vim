@@ -20,32 +20,36 @@ let PLUGIN_RTP = TEST_DIR . '/..'
 
 let s:TEST_FILE_DIR=TEST_DIR . '/editorconfig-core-test/glob/'
 
+function s:appendToVar(varname, key, value)
+  execute 'let ' . a:varname . '.="' . a:key . "=". a:value . '\n"'
+endfunction
+
 " Global variable g:ecTestResult defined in test_runner.vim
 let g:editor_config_config = {
-      \ 'backslash':        { 'execute': "let g:ecTestResult .= 'backslash={v}\n'" },
-      \ 'choice':           { 'execute': "let g:ecTestResult .= 'choice={v}\n'" },
-      \ 'choice_with_dash': { 'execute': "let g:ecTestResult .= 'choice_with_dash={v}\n'" },
-      \ 'close_inside':     { 'execute': "let g:ecTestResult .= 'close_inside={v}\n'" },
-      \ 'close_outside':    { 'execute': "let g:ecTestResult .= 'close_outside={v}\n'" },
-      \ 'closing':          { 'execute': "let g:ecTestResult .= 'closing={v}\n'" },
-      \ 'comma':            { 'execute': "let g:ecTestResult .= 'comma={v}\n'" },
-      \ 'empty':            { 'execute': "let g:ecTestResult .= 'empty={v}\n'" },
-      \ 'key':              { 'execute': "let g:ecTestResult .= 'key={v}\n'" },
-      \ 'key1':             { 'execute': "let g:ecTestResult .= 'key1={v}\n'" },
-      \ 'key2':             { 'execute': "let g:ecTestResult .= 'key2={v}\n'" },
-      \ 'key3':             { 'execute': "let g:ecTestResult .= 'key3={v}\n'" },
-      \ 'key4':             { 'execute': "let g:ecTestResult .= 'key4={v}\n'" },
-      \ 'keyb':             { 'execute': "let g:ecTestResult .= 'keyb={v}\n'" },
-      \ 'keyc':             { 'execute': "let g:ecTestResult .= 'keyc={v}\n'" },
-      \ 'nested':           { 'execute': "let g:ecTestResult .= 'nested={v}\n'" },
-      \ 'number':           { 'execute': "let g:ecTestResult .= 'number={v}\n'" },
-      \ 'patterns':         { 'execute': "let g:ecTestResult .= 'patterns={v}\n'" },
-      \ 'range':            { 'execute': "let g:ecTestResult .= 'range={v}\n'" },
-      \ 'range_and_choice': { 'execute': "let g:ecTestResult .= 'range_and_choice={v}\n'" },
-      \ 'slash_half_open':  { 'execute': "let g:ecTestResult .= 'slash_half_open={v}\n'" },
-      \ 'slash_inside':     { 'execute': "let g:ecTestResult .= 'slash_inside={v}\n'" },
-      \ 'unmatched':        { 'execute': "let g:ecTestResult .= 'unmatched={v}\n'" },
-      \ 'words':            { 'execute': "let g:ecTestResult .= 'words={v}\n'" }
+      \ 'backslash':        funcref("s:appendToVar", [ "g:ecTestResult", "backslash" ]),
+      \ 'choice':           funcref("s:appendToVar", [ "g:ecTestResult", "choice" ]),
+      \ 'choice_with_dash': funcref("s:appendToVar", [ "g:ecTestResult", "choice_with_dash" ]),
+      \ 'close_inside':     funcref("s:appendToVar", [ "g:ecTestResult", "close_inside" ]),
+      \ 'close_outside':    funcref("s:appendToVar", [ "g:ecTestResult", "close_outside" ]),
+      \ 'closing':          funcref("s:appendToVar", [ "g:ecTestResult", "closing" ]),
+      \ 'comma':            funcref("s:appendToVar", [ "g:ecTestResult", "comma" ]),
+      \ 'empty':            funcref("s:appendToVar", [ "g:ecTestResult", "empty" ]),
+      \ 'key':              funcref("s:appendToVar", [ "g:ecTestResult", "key" ]),
+      \ 'key1':             funcref("s:appendToVar", [ "g:ecTestResult", "key1" ]),
+      \ 'key2':             funcref("s:appendToVar", [ "g:ecTestResult", "key2" ]),
+      \ 'key3':             funcref("s:appendToVar", [ "g:ecTestResult", "key3" ]),
+      \ 'key4':             funcref("s:appendToVar", [ "g:ecTestResult", "key4" ]),
+      \ 'keyb':             funcref("s:appendToVar", [ "g:ecTestResult", "keyb" ]),
+      \ 'keyc':             funcref("s:appendToVar", [ "g:ecTestResult", "keyc" ]),
+      \ 'nested':           funcref("s:appendToVar", [ "g:ecTestResult", "nested" ]),
+      \ 'number':           funcref("s:appendToVar", [ "g:ecTestResult", "number" ]),
+      \ 'patterns':         funcref("s:appendToVar", [ "g:ecTestResult", "patterns" ]),
+      \ 'range':            funcref("s:appendToVar", [ "g:ecTestResult", "range" ]),
+      \ 'range_and_choice': funcref("s:appendToVar", [ "g:ecTestResult", "range_and_choice" ]),
+      \ 'slash_half_open':  funcref("s:appendToVar", [ "g:ecTestResult", "slash_half_open" ]),
+      \ 'slash_inside':     funcref("s:appendToVar", [ "g:ecTestResult", "slash_inside" ]),
+      \ 'unmatched':        funcref("s:appendToVar", [ "g:ecTestResult", "unmatched" ]),
+      \ 'words':            funcref("s:appendToVar", [ "g:ecTestResult", "words" ]),
       \ }
 
 let g:editor_config_debug = 3

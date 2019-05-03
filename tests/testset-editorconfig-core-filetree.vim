@@ -15,23 +15,26 @@ let PLUGIN_RTP = TEST_DIR . '/..'
 
 let s:TEST_FILE_DIR=TEST_DIR . '/editorconfig-core-test/filetree/'
 
+function s:appendToVar(varname, key, value)
+  execute 'let ' . a:varname . '.="' . a:key . "=". a:value . '\n"'
+endfunction
+
 " Global variable g:ecTestResult defined in test_runner.vim
 let g:editor_config_config = {
-      \ 'key':                      { 'execute': "let g:ecTestResult .= 'key={v}\n'" },
-      \ 'key1':                     { 'execute': "let g:ecTestResult .= 'key1={v}\n'" },
-      \ 'key2':                     { 'execute': "let g:ecTestResult .= 'key2={v}\n'" },
-      \ 'key4':                     { 'execute': "let g:ecTestResult .= 'key4={v}\n'" },
-      \ 'child':                    { 'execute': "let g:ecTestResult .= 'child={v}\n'" },
-      \ 'name':                     { 'execute': "let g:ecTestResult .= 'name={v}\n'" },
-      \ 'charset':                  { 'execute': "let g:ecTestResult .= 'charset={v}\n'" },
-      \ 'tab_width':                { 'execute': "let g:ecTestResult .= 'tab_width={v}\n'" },
-      \ 'indent_size':              { 'execute': "let g:ecTestResult .= 'indent_size={v}\n'" },
-      \ 'insert_final_newline':     { 'execute': "let g:ecTestResult .= 'insert_final_newline={v}\n'" },
-      \ 'trim_trailing_whitespace': { 'execute': "let g:ecTestResult .= 'trim_trailing_whitespace={v}\n'" },
-      \ 'indent_style':             { 'execute': "let g:ecTestResult .= 'indent_style={v}\n'" },
-      \ 'end_of_line':              { 'execute': "let g:ecTestResult .= 'end_of_line={v}\n'" },
+      \ 'key':                      funcref("s:appendToVar", [ "g:ecTestResult", 'key' ]),
+      \ 'key1':                     funcref("s:appendToVar", [ "g:ecTestResult", 'key1' ]),
+      \ 'key2':                     funcref("s:appendToVar", [ "g:ecTestResult", 'key2' ]),
+      \ 'key4':                     funcref("s:appendToVar", [ "g:ecTestResult", 'key4' ]),
+      \ 'child':                    funcref("s:appendToVar", [ "g:ecTestResult", 'child' ]),
+      \ 'name':                     funcref("s:appendToVar", [ "g:ecTestResult", 'name' ]),
+      \ 'charset':                  funcref("s:appendToVar", [ "g:ecTestResult", 'charset' ]),
+      \ 'tab_width':                funcref("s:appendToVar", [ "g:ecTestResult", 'tab_width' ]),
+      \ 'indent_size':              funcref("s:appendToVar", [ "g:ecTestResult", 'indent_size' ]),
+      \ 'insert_final_newline':     funcref("s:appendToVar", [ "g:ecTestResult", 'insert_final_newline' ]),
+      \ 'trim_trailing_whitespace': funcref("s:appendToVar", [ "g:ecTestResult", 'trim_trailing_whitespace' ]),
+      \ 'indent_style':             funcref("s:appendToVar", [ "g:ecTestResult", 'indent_style' ]),
+      \ 'end_of_line':              funcref("s:appendToVar", [ "g:ecTestResult", 'end_of_line' ]),
       \ }
-
 
 let g:editor_config_debug = 3
 runtime plugin/editorconfig.vim

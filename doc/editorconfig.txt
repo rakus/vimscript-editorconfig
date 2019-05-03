@@ -1,4 +1,4 @@
-*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 Apr 24
+*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 May 03
 
                   EDITOR CONFIG FOR VIM   by Ralf Schandl
 
@@ -207,16 +207,26 @@ might change!
                         files.
                         If empty, always search for `.editorconfig`.
 
-`g:editor_config_blacklist`
-                        Prevent applying editorconfig by filetypes or
-                        filenames.
+`g:editor_config_blacklist_filetype`
+                        A list of glob expressions matched against |filetype|s.
+                        Prevents applying editorconfig by filetype.
+                        E.g.:
 >
-                        let g:editor_config_blacklist = {
-                           'filetype': [ 'git*',  ],
-                           'filename': [ '*.tmp', '*.xy' ]
-                        }
+                        let b:editor_config_blacklist_filetype = [ 'c', 'git*']
 <
-                        Note: This is case-insensitive.
+                        Ignores files with the filetype `c` and any files with
+                        a filetype starting with `git`.
+                        This is case-insensitive.
+
+`g:editor_config_blacklist_name`
+                        A list of glob expressions matched against file names..
+                        Prevents applying editorconfig by file name.
+                        E.g.:
+>
+                        let b:editor_config_blacklist_name = [ '*.tmp', '*.xy']
+<
+                        Ignores files which name match `*.tmp` or `*.xy`.
+                        This is case-insensitive.
 
                         Normally you need a leading `*` to ignore a file.
                         If you want to ignore the file `testcase.txt` you
@@ -224,14 +234,17 @@ might change!
                         If you want to ignore remote files you add the
                         filename `scp:*` (or whatever protocol you use).
 
-`g:editor_config_picky`   If this variable is set, the editorconfig plugin
-                        will also print a message if a warning occurred during
-                        processing (like a unknown option). By default a
-                        message is only printed on error (like can't parse
-                        file, invalid property value).
+`g:editor_config_verbose` Numerical value to control messages from the
+                        editorconfig plugin.
+                        Possible values:
+                          0: Default. Only print a messages for errors. E.g. a
+                             invalid value for a known property.
+                          1: Also print a message if a warning occurred. E.g.
+                             a unknown property.
+                         -1: Don't print any message. (Not recommended)
 
-`g:editor_config_quiet`   If this variable is set, does not print a message
-                        if a error or warning occurred during processing.
+                        Independent of this setting all messages are viewable
+                        with the command |EditorConfigStatus|.
 
 `g:editor_config_debug`   Numerical variable. If set, debug messages are added
                         to the editorconfig info and are displayable with
@@ -254,100 +267,13 @@ New custom editorconfig properties can be defined using the global dictionary
 plugin is loaded!
 
 The entries in this dictionaries uses the name of the property as key and a
-dictionary as value.
-
-Possible keys in the value dictionary are:
-
-`lower_case`            If this key is present and set to `true`, the value of
-                      the property is changed to lower case.
-                      (optional)
-
-`value_process`         Is a optional |funcref| to a function to be called
-                      with the name of the option and its value. It must
-                      return the processed value. If the value can't be
-                      handled, the function must throw an exception with the
-                      text prefixed with "EditorConfig: ".
-                      Example:
->
-                      function! s:PositiveInteger(name, value)
-                        if a:value =~ '\d\+'
-                          let int = str2nr(a:value)
-                          if int == 0
-                            throw "EditorConfig: " . a:name . ": Must not be 0"
-                          endif
-                          return int
-                        else
-                          throw "EditorConfig: Invalid " . a:name . ": \"" . a:value . "\""
-                        endif
-                      endfunction
-<
-                      There are two special return values handled by the
-                      plugin:
-                      - `unset`    This is handled as if the value was
-                                 initially set to `unset`.
-                      - `_IGNORE_` If this value is returned, the plugin acts
-                                 as if the property was not given at all.
-
-`execute`              This describes what needs to be done to apply the
-                     property. The value is either a string or a |funcref| or
-                     a dictionary with string keys and a string or a |funcref|
-                     as value.
-                     If the value is a string, the `{v}` is replaced with the
-                     value. The marker `{e}` is replaced with the escaped
-                     value, meaning `<space>`, `|` and `\` are escaped with a
-                     backslash.
-                     The |funcref| is called with the value as parameter.
-
+|funcref| as value. When the property is to be applied, the `funcref` is
+called with the value as parameter. Note that the value is never lower-cased,
+so if you do some string compare, consider doing it case-insensitive.
 
 Examples:
 ---------
-
-New property `testcase` to set a buffer local variabel:
->
-    let g:editor_config_config = {
-        \ 'testcase': { 'execute': "let b:testcase='{v}'" }
-<
-Note the usage of double and single quotes in the value of `execute`. This way
-the value is a |literal-string|, which means there is no need to escape
-backslashes. If the quotes are reverted (using singles to enclose the entire
-string and double quotes for the assignment), the replacement `{e}` has to be
-used to ensure proper escaping of backslashes. Like `'let b:testcase="{e}"'`
-
-
-New property `readonly`. If the property has the value `true` the setlocal
-command is executed. If `false` nothing is to be done. The entry for `false`
-is needed anyway, to identify it as a valid value.
-NOTE: The keys to the dictionary in `execute` are always lower case!
->
-    let g:editor_config_config = {
-        \ 'readonly': {
-        \   'execute': {
-        \     'true': 'setlocal readonly nomodifiable',
-        \     'false': ''
-        \   }
-        \ }
-<
-
-New property `conceallevel` (see |conceallevel|):
->
-    function ValidateConceal(name, value)
-      if a:value =~# '^\d\+$'
-        let i = str2nr(a:value)
-        if i >= 0 && i <= 3
-          return i
-        endif
-      endif
-      throw "EditorConfig: " . a:name . " = " . a:value . " invalid"
-    endfunc
-
-    let g:editor_config_config = {
-        \ 'conceallevel': {
-        \   'value_process`: funcref('ValidateConceal'),
-        \   'execute': 'setlocal conceallevel={v}'
-        \   }
-        \ }
-<
-The usage of `value_process` is optional:
+Define a new property `conceal_level` that sets the Vim option |conceallevel|.
 >
     function SetConceal(value)
       if a:value =~# '^\d\+$'
@@ -357,37 +283,37 @@ The usage of `value_process` is optional:
           return
         endif
       endif
-      throw "EditorConfig: concellevel invalid: " . a:value
+      throw "EditorConfig: conceal_level invalid: " . a:value
     endfunction
 
     let g:editor_config_config = {
-          \ 'conceallevel': {
-          \   'execute': funcref('SetConceal')
-          \   }
+          \ 'conceal_level': funcref('SetConceal')
           \ }
 <
 
-To disable the support for a known property, define it with an empty `execute`.
+To disable the support for a known property, define any String instead of a
+`funcref`. The content of the String is irrelevant, could be empty.
 The following disables support for the property `indent_style`:
 >
-    let g:editor_config_config = { 'indent_style': { 'execute': '' } }
+    let g:editor_config_config = { 'indent_style': "I don't like this." }
 <
 
 Support Functions:
 ------------------
 
-Editorconfig provides three functions to add messages to its info or warning
+Editorconfig provides three functions to add messages to its message
 list. This messages can later be displayed with the |:EditorConfig|Status|
 command.
 
-`editorconfig#Info(msg)`  Adds the given message to the list of info messages.
+`editorconfig#Info(msg)`
+                      Adds the given message as info messages.
 
 `editorconfig#Warning(msg)`
-                        Adds the given message to the list of warning messages.
+                      Adds the given message as warning messages.
 
 `editorconfig#Debug(msg, ...)`
                       If `g:editor_config_debug` is set, adds the given
-                      formatted message to the list of info messages. This is
+                      formatted message to the list as info message. This is
                       to be used like |printf()|. Example:
                       `editor_config_debug#Debug("Hello %s", "world")`
 

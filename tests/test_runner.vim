@@ -75,8 +75,10 @@ function! RunTestSet(name, tests)
   endfor
 
   let testResult = []
+  let failingTests = []
   if !empty(all_errors)
     for ed in all_errors
+      call add(failingTests, ed[0])
       call add(testResult, "Test: " . ed[0])
       for msg in ed[1]
         call add(testResult, "  - " . msg)
@@ -84,6 +86,9 @@ function! RunTestSet(name, tests)
     endfor
   endif
 
+  if !empty(failingTests)
+    call add(testResult, "Failed: " . string(failingTests))
+  endif
   call add(testResult, a:name . ": Tests: " . tst_count . " Failed: " . tst_fail)
 
   call writefile(testResult, $TEST_RESULT_FILE)

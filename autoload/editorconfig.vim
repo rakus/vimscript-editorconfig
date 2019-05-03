@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " autoload script of editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019 Apr 12
+" Last Change: 2019-05-03T07:56:55+0200
 
 " The core plugin.
 " For documentation see ../doc/editorconfig.vim
@@ -27,6 +27,17 @@ function editorconfig#ClearCache()
   let s:glob2re_cache = {}
 endfunction
 
+" Function to trim trailing whitespaces before saving the file.
+" Called via autocmd, see SetTrimTrailingWhitespaces below.
+function! s:TrimTrailingWhiteSpace() abort
+  let save_pos = winsaveview()
+  try
+    keeppattern %s/\s\+$//e
+  finally
+    call winrestview(save_pos)
+  endtry
+endfunction
+
 " checks hat the value is a integer > 0
 " throws exception if not
 function! s:PositiveInteger(name, value) abort
@@ -41,68 +52,78 @@ function! s:PositiveInteger(name, value) abort
   endif
 endfunction
 
-" Checks that indent_size is either 'tab' or a integer > 0
-function! s:ProcessIndentSize(name, value) abort
+function s:SetIndentStyle(value) abort
+  if a:value ==? "tab"
+    setlocal noexpandtab
+  elseif a:value ==? "space"
+    setlocal expandtab
+  else
+    throw "EditorConfig: Invalid value for indent_style: " . value)
+  endif
+endfunction
+
+function s:SetIndentSize(value) abort
   if 'tab' == a:value
-    return 0
+    let indent = 0
   else
-    return s:PositiveInteger(a:name, a:value)
+    let indent = s:PositiveInteger("indent_size", a:value)
   endif
+  let &l:shiftwidth=indent
+  let &l:softtabstop=indent
 endfunction
 
-" Checks that max_line_length is either 'off' or a integer > 0
-function! s:MaxLineLength(name, value) abort
-  if a:value == 'off'
-    " TODO: Or return 0?
-    return &l:textwidth
+function s:SetTabWidth(value) abort
+  let &l:tabstop = s:PositiveInteger("tab_width", a:value)
+endfunction
+
+function s:SetEndOfLine(value) abort
+  if a:value ==? "lf"
+    setlocal fileformat=unix
+  elseif a:value ==? 'cr'
+    setlocal fileformat=mac
+  elseif a:value ==? 'crlf'
+    setlocal fileformat=dos
   else
-    return s:PositiveInteger(a:name, a:value)
+    throw "EditorConfig: Invalid value for end_of_line: " . value)
   endif
 endfunction
 
-" Function to trim trailing whitespaces before saving the file.
-" Called via autocmd, see InstallTrimTrailingSpaces below.
-function! s:TrimTrailingWhiteSpace() abort
-  let save_pos = winsaveview()
-  try
-    keeppattern %s/\s\+$//e
-  finally
-    call winrestview(save_pos)
-  endtry
-endfunction
-
-" Install the autocmd to trim trailing whitespaces before save
-function! s:InstallTrimTrailingSpaces(unused) abort
-  augroup EditorConfigTrim
-    autocmd! * <buffer>
-    autocmd BufWritePre <buffer> :call s:TrimTrailingWhiteSpace()
-  augroup END
-  call editorconfig#Info("Installed autocmd TrimTrailingWhiteSpace")
-endfunction
-
-" Validate that the given encoding is supported by Vim
-" If not, throws exception
-function! s:ValidateEncoding(unused, encoding) abort
-  if index(s:enc_names, a:encoding) > -1
-    return a:encoding
+function s:SetTrimTrailingWhitespaces(value) abort
+  if a:value ==? "true"
+    augroup EditorConfigTrim
+      autocmd! * <buffer>
+      autocmd BufWritePre <buffer> :call s:TrimTrailingWhiteSpace()
+    augroup END
+  elseif a:value ==? 'false'
+    augroup EditorConfigTrim
+      autocmd! * <buffer>
+    augroup END
+  else
+    throw "EditorConfig: Invalid value for trim_trailing_whitespace: " . value)
   endif
-  for re in s:enc_re
-    if a:encoding =~ re
-      return a:encoding
-    endif
-  endfor
-  throw "EditorConfig: Unsupported encoding: " . a:encoding
 endfunction
 
-" Sets the file encoding
-function! s:FileEncoding(encoding) abort
-  let fenc = a:encoding
+function s:SetFinalNewline(value) abort
+  if a:value ==? "true"
+      setlocal fixendofline
+  elseif a:value ==? 'false'
+      setlocal nofixendofline
+  else
+    throw "EditorConfig: Invalid value for insert_final_newline: " . value)
+  endif
+endfunction
+
+function s:SetFileEncoding(value) abort
+  if index(s:enc_names, a:value) == -1 && empty(map(s:enc_re, {i,v -> match(a:value, v) == 0}))
+    throw "EditorConfig: Unsupported encoding: " . a:value
+  endif
+
+  let fenc = a:value
   if fenc == 'utf-8-bom'
     let fenc = 'utf-8'
   endif
   if fenc != &l:fileencoding
     let org_fenc = empty(&l:fileencoding)? 'unset' : &l:fileencoding
-    call editorconfig#Info("Changed fileencoding from " . org_fenc . " to " . fenc)
     let &l:fileencoding = fenc
     " TODO: Or should we reload the file with the given encoding
     " if Vim decided to choose another?
@@ -113,74 +134,55 @@ function! s:FileEncoding(encoding) abort
     "  call editorconfig#Info("Set fileencoding to " . fenc)
     "  let &l:fileencoding = fenc
     "endif
-  else
-    call editorconfig#Info("Fileencoding already " . fenc)
   endif
 
   " TODO: Is this the only case to set a bom?
-  if a:encoding =~ '.*-bom$'
+  if a:value =~ '.*-bom$'
     setlocal bomb
-    call editorconfig#Info("Setting byte-order-mark")
+    "call editorconfig#Info("Setting byte-order-mark")
   endif
-endfunc
+endfunction
+
+function s:SetMaxLineLength(value) abort
+  if a:value == 'off'
+    " TODO: Or use 0?
+    let maxLen =  &l:textwidth
+  else
+    let maxLen = s:PositiveInteger('max_line_length', a:value)
+  endif
+  let &l:textwidth = maxLen
+endfunction
+
+function s:SetSpellLang(value) abort
+  let &l:spelllang=a:value
+endfunction
+
+function s:SetSpell(value) abort
+  if a:value ==? "true"
+      setlocal spell
+  elseif a:value ==? 'false'
+      setlocal nospell
+  else
+    throw "EditorConfig: Invalid value for spell_check: " . value)
+  endif
+endfunction
+
+function s:NoOp() abort
+endfunction
 
 " dictionary of supported properties
 " see :help editorconfig-extending for details
 let s:editor_config_config_default = {
-      \ 'indent_style': {
-      \   'execute': {
-      \     'tab': 'setlocal noexpandtab',
-      \     'space': 'setlocal expandtab'
-      \   }
-      \ },
-      \ 'indent_size': {
-      \   'lower_case': v:true,
-      \   'value_process': funcref('s:ProcessIndentSize'),
-      \   'execute': 'setlocal shiftwidth={v} softtabstop={v}'
-      \ },
-      \ 'tab_width': {
-      \   'lower_case': v:true,
-      \   'value_process': funcref('s:PositiveInteger'),
-      \   'execute': 'let &l:tabstop = {v}'
-      \ },
-      \ 'end_of_line': {
-      \   'execute': {
-      \     'lf': 'setlocal fileformat=unix',
-      \     'cr': 'setlocal fileformat=mac',
-      \     'crlf': 'setlocal fileformat=dos'
-      \   },
-      \ },
-      \ 'trim_trailing_whitespace': {
-      \   'execute': {
-      \     'true': funcref('s:InstallTrimTrailingSpaces'),
-      \     'false': ''
-      \   }
-      \ },
-      \ 'insert_final_newline': {
-      \   'execute': {
-      \     'true': 'setlocal fixendofline',
-      \     'false': 'setlocal nofixendofline'
-      \   }
-      \ },
-      \ 'charset': {
-      \   'lower_case': v:true,
-      \   'value_process': funcref('s:ValidateEncoding'),
-      \   'execute': funcref('s:FileEncoding')
-      \ },
-      \ 'max_line_length': {
-      \   'lower_case': v:true,
-      \   'value_process': funcref('s:MaxLineLength'),
-      \   'execute': 'setlocal textwidth={v}'
-      \ },
-      \ 'spell_lang': {
-      \   'execute': 'setlocal spelllang={v}'
-      \ },
-      \ 'spell_check': {
-      \   'execute': {
-      \     'true': 'setlocal spell',
-      \     'false': 'setlocal nospell'
-      \   }
-      \ }
+      \ 'indent_style':             funcref("s:SetIndentStyle"),
+      \ 'indent_size':              funcref("s:SetIndentSize"),
+      \ 'tab_width':                funcref("s:SetTabWidth"),
+      \ 'end_of_line':              funcref("s:SetEndOfLine"),
+      \ 'trim_trailing_whitespace': funcref("s:SetTrimTrailingWhitespaces"),
+      \ 'insert_final_newline':     funcref("s:SetFinalNewline"),
+      \ 'charset':                  funcref("s:SetFileEncoding"),
+      \ 'max_line_length':          funcref("s:SetMaxLineLength"),
+      \ 'spell_lang':               funcref("s:SetSpellLang"),
+      \ 'spell_check':              funcref("s:SetSpell")
       \}
 
 let s:editor_config_config = s:editor_config_config_default
@@ -233,57 +235,17 @@ function s:ProcessOption(ctx, kv) abort
   let value = a:kv[1]
 
   if value ==? 'unset'
-    return [ key, '' ]
+    return [ key, funcref("s:NoOp") ]
   endif
 
-  let cfg = s:editor_config_config[a:kv[0]]
-  if get(cfg, 'lower_case', v:false) == v:true
-    let value = tolower(value)
-  endif
+  let l:Cmd = s:editor_config_config[a:kv[0]]
 
-  if has_key(cfg, 'value_process')
-    let value = cfg.value_process(key, value)
-  endif
-  if type(value) == v:t_string
-    if value ==# 'unset'
-      return [ key, '' ]
-    elseif value ==# '_IGNORE_'
-      return []
-    endif
-  endif
-
-  let l:Cmd=""
-  if type(cfg.execute) == v:t_dict
-    let lc_value = tolower(value)
-    if has_key(cfg.execute, lc_value)
-      let l:Cmd = cfg.execute[lc_value]
-    else
-      call s:ParserError(a:ctx, "Unsupported config value for " . key .": " . value . " (" . lc_value . ")")
-      return []
-    endif
-  else
-    let l:Cmd = cfg.execute
-  endif
-
-  if empty(l:Cmd)
-    return [ key, '' ]
-  else
-    if type(l:Cmd) == v:t_func
-      let l:Cmd = funcref(l:Cmd, [ value])
-    else
-      try
-        " We insert the value in a string, escape backslashes
-        let value = escape(value, '\')
-        let l:Cmd = substitute(l:Cmd, '{v}', value, 'g')
-        " TODO: Escape more characters in property value?
-        let l:Cmd = substitute(l:Cmd, '{e}', escape(value, ' |\'), 'g')
-      catch /E767:.*/
-        "ignored: No format option
-      endtry
-    endif
+  if type(l:Cmd) == v:t_func
+    let l:Cmd = funcref(l:Cmd, [ value])
     return [ key, l:Cmd ]
+  else
+    return [ key, funcref("s:NoOp") ]
   endif
-
 endfunction
 
 " a not escaped # or ;
@@ -291,6 +253,9 @@ let s:LINE_COMMENT = '\(\(\(\\\\\)*\)\@>\\\)\@<![#;]'
 
 " parse the .editorconfig file
 function s:ParseFile(fn) abort
+
+  let INVALID_PATTERN = '||__INVALID__||'
+
   let fqfn = fnamemodify(a:fn, ':p')
 
   let cfg = { 'root': 'false', 'fcfg': [] }
@@ -310,7 +275,7 @@ function s:ParseFile(fn) abort
     if ln =~ '^\[.*\]$'
       " found a section ([glob-expr])
       if !empty(pattern)
-        if pattern !=# '__INVALID__'
+        if pattern !=# INVALID_PATTERN
           " save previous section
           call add(cfg.fcfg, [ pattern, fcfg ])
         endif
@@ -333,11 +298,11 @@ function s:ParseFile(fn) abort
         catch /Invalid Glob:.*/
           call s:ParserError(v:exception)
           call s:ParserWarning(ctx, "Ignoring section with invalid glob")
-          let pattern = '__INVALID__'
+          let pattern = INVALID_PATTERN
         endtry
       else
         call s:ParserWarning(ctx, "Ignoring section with empty glob")
-        let pattern = '__INVALID__'
+        let pattern = INVALID_PATTERN
       endif
       let fcfg['.ec_glob'] = glob
 
@@ -356,7 +321,7 @@ function s:ParseFile(fn) abort
     endif
   endfor
   if !empty(pattern)
-    if pattern != '__INVALID__'
+    if pattern != INVALID_PATTERN
       call add(cfg.fcfg, [ pattern, fcfg ])
     endif
   else
@@ -395,7 +360,7 @@ function! s:ApplyEditorConfig(filename, ec_list) abort
             try
               let kv = s:ProcessOption(ctx, [ property, value ])
               if !empty(kv)
-                let cmds[kv[0]] = { 'value': value, 'cmd': kv[1] }
+                let cmds[kv[0]] = { 'value': value, 'cmd': kv[1], 'ctx': ctx }
               endif
             catch /^EditorConfig:.*$/
               let msg = matchstr(v:exception, '^EditorConfig:\s*\zs.*\ze$')
@@ -431,22 +396,15 @@ function! s:ApplyEditorConfig(filename, ec_list) abort
     endfor
 
     " execute the Vim statments (command or function call)
-    if type(l:Cmd) == v:t_func
-      try
-        call l:Cmd()
-      catch /.*/
-        call editorconfig#Warning(property .': Calling ' . string(l:Cmd) . " failed with: " . v:exception)
-      endtry
-    else
-      if !empty(l:Cmd)
-        try
-          execute(l:Cmd)
-          call editorconfig#Info(l:Cmd)
-        catch /.*/
-          call editorconfig#Warning(property .': ' . l:Cmd . " Failed with: " . v:exception)
-        endtry
-      endif
-    endif
+    try
+      call l:Cmd()
+      call editorconfig#Info("Set " . property .': ' . propInfo.value)
+    catch /^EditorConfig:.*$/
+      let msg = matchstr(v:exception, '^EditorConfig:\s*\zs.*\ze$')
+      call s:ParserError(propInfo.ctx, msg)
+    catch /.*/
+      call editorconfig#Warning(property .': Calling ' . string(l:Cmd) . " failed with: " . v:exception)
+    endtry
   endfor
 
   " Special handling for the dependencies between indent_size and tab_width.
@@ -496,9 +454,9 @@ function! editorconfig#HandleEditorConfig(filename, ec_files) abort
   endif
 
   " if not quiet print a message if a error was found
-  if ! exists('g:editor_config_quiet')
+  if get(g:, "editor_config_verbose", 0) >= 0
     let status = get(b:, "editor_config_status", "")
-    if status == "ERROR" || ( exists('g:editor_config_picky') &&  status == "WARNING" )
+    if status == "ERROR" || ( get(g:, "editor_config_verbose", 0) >= 1 &&  status == "WARNING" )
       echohl ErrorMsg
       echomsg "EditorConfig Warnings/Errors. Execute ':EditorConfigStatus' for details."
       echohl None

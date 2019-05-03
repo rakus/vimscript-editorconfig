@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " autoload script of editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019 Apr 12
+" Last Change: 2019-05-03T08:02:30+0200
 
 " The core plugin.
 " For documentation see ../doc/editorconfig.vim
@@ -89,9 +89,10 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
   endif
 
   " project base dirs
-  if empty(a:force) && exists("g:editor_config_base_dirs")
+  let editor_config_base_dirs = get(g:, "editor_config_base_dirs", [])
+  if empty(a:force) && !empty(editor_config_base_dirs)
     let found = 0
-    for basedir in g:editor_config_base_dirs
+    for basedir in editor_config_base_dirs
       if stridx(filename, basedir) == 0
         let found = 1
         break
@@ -105,28 +106,24 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
   endif
 
   " check blacklist
-  if empty(a:force) && exists("g:editor_config_blacklist")
+  if empty(a:force)
     if !empty(&filetype)
-      if has_key(g:editor_config_blacklist, 'filetype')
-        for ft in g:editor_config_blacklist.filetype
-          if &filetype =~?  glob2regpat(ft)
-            call editorconfig#Debug('Skipped - blacklisted filetype: %s', ft)
-            return 2
-          endif
-        endfor
-      endif
-    endif
-    if has_key(g:editor_config_blacklist, 'filename')
-      for glob in g:editor_config_blacklist.filename
-        if glob[0] != '*'
-          let glob = '*/' . glob
-        endif
-        if filename =~?  glob2regpat(glob)
-          call editorconfig#Debug('Skipped - blacklisted file name pattern: %s', glob)
-          return 3
+      for ft in get(g:, "editor_config_blacklist_filetype", [])
+        if &filetype =~?  glob2regpat(ft)
+          call editorconfig#Debug('Skipped - blacklisted filetype: %s', ft)
+          return 2
         endif
       endfor
     endif
+    for glob in get(g:, "editor_config_blacklist_name", [])
+      if glob[0] != '*'
+        let glob = '*/' . glob
+      endif
+      if filename =~?  glob2regpat(glob)
+        call editorconfig#Debug('Skipped - blacklisted file name pattern: %s', glob)
+        return 3
+      endif
+    endfor
   endif
 
   let ec_files = findfile(editor_config_file, file_dir . ';', -1)
