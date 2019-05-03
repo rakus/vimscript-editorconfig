@@ -69,7 +69,7 @@ function! RunTestSet(name, tests)
     if !empty(v:errors)
       let tst_fail += 1
       let msgs = copy(v:errors)
-      call extend(msgs, g:editor_config_info)
+      call extend(msgs, g:editorconfig_info)
       call add(all_errors, [ name, msgs])
     endif
   endfor
