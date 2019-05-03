@@ -20,7 +20,7 @@ function s:appendToVar(varname, key, value)
 endfunction
 
 " Global variable g:ecTestResult defined in test_runner.vim
-let g:editor_config_config = {
+let g:editorconfig_config = {
       \ 'key':                      funcref("s:appendToVar", [ "g:ecTestResult", 'key' ]),
       \ 'key1':                     funcref("s:appendToVar", [ "g:ecTestResult", 'key1' ]),
       \ 'key2':                     funcref("s:appendToVar", [ "g:ecTestResult", 'key2' ]),
@@ -36,7 +36,7 @@ let g:editor_config_config = {
       \ 'end_of_line':              funcref("s:appendToVar", [ "g:ecTestResult", 'end_of_line' ]),
       \ }
 
-let g:editor_config_debug = 3
+let g:editorconfig_debug = 3
 runtime plugin/editorconfig.vim
 
 execute "source " . escape(TEST_DIR, ' \')  . "/test_runner.vim"

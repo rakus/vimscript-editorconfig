@@ -164,8 +164,8 @@ might change!
 
                                                            *EditorConfigApply*
 :EditorConfigApply[!]   (Re)Applies editorconfig settings to the current file.
-                        If `!` is given, ignores |g:editor_config_blacklist|
-                        and |g:editor_config_base_dirs| and also applies the
+                        If `!` is given, ignores |g:editorconfig_blacklist|
+                        and |g:editorconfig_base_dirs| and also applies the
                         settings to files that normally would be ignored.
 
                                                           *EditorConfigStatus*
@@ -200,30 +200,30 @@ might change!
 WARNING: This plugin is in a early stage, the name of the following variables
 might change!
 
-`g:editor_config_base_dirs`
+`g:editorconfig_base_dirs`
                         List of directories (absolute names) to be whitelisted
                         for editorconfig. Only files opened below one of this
                         directories triggers the search for `.editorconfig`
                         files.
                         If empty, always search for `.editorconfig`.
 
-`g:editor_config_blacklist_filetype`
+`g:editorconfig_blacklist_filetype`
                         A list of glob expressions matched against |filetype|s.
                         Prevents applying editorconfig by filetype.
                         E.g.:
 >
-                        let b:editor_config_blacklist_filetype = [ 'c', 'git*']
+                        let b:editorconfig_blacklist_filetype = [ 'c', 'git*']
 <
                         Ignores files with the filetype `c` and any files with
                         a filetype starting with `git`.
                         This is case-insensitive.
 
-`g:editor_config_blacklist_name`
+`g:editorconfig_blacklist_name`
                         A list of glob expressions matched against file names..
                         Prevents applying editorconfig by file name.
                         E.g.:
 >
-                        let b:editor_config_blacklist_name = [ '*.tmp', '*.xy']
+                        let b:editorconfig_blacklist_name = [ '*.tmp', '*.xy']
 <
                         Ignores files which name match `*.tmp` or `*.xy`.
                         This is case-insensitive.
@@ -234,10 +234,10 @@ might change!
                         If you want to ignore remote files you add the
                         filename `scp:*` (or whatever protocol you use).
 
-`g:editor_config_verbose` Numerical value to control messages from the
+`g:editorconfig_verbose`  Numerical value to control messages from the
                         editorconfig plugin.
                         Possible values:
-                          0: Default. Only print a messages for errors. E.g. a
+                          0: Default. Only print a message for errors. E.g. a
                              invalid value for a known property.
                           1: Also print a message if a warning occurred. E.g.
                              a unknown property.
@@ -246,7 +246,7 @@ might change!
                         Independent of this setting all messages are viewable
                         with the command |EditorConfigStatus|.
 
-`g:editor_config_debug`   Numerical variable. If set, debug messages are added
+`g:editorconfig_debug`    Numerical variable. If set, debug messages are added
                         to the editorconfig info and are displayable with
                         |:EditorConfig|Status|. Higher numbers, mean more debug
                         messages.
@@ -263,7 +263,7 @@ might change!
 5. Extending Editorconfig                             *editorconfig-extending*
 
 New custom editorconfig properties can be defined using the global dictionary
-`g:editor_config_config`. The variable must be defined before the editorconfig
+`g:editorconfig_config`. The variable must be defined before the editorconfig
 plugin is loaded!
 
 The entries in this dictionaries uses the name of the property as key and a
@@ -286,7 +286,7 @@ Define a new property `conceal_level` that sets the Vim option |conceallevel|.
       throw "EditorConfig: conceal_level invalid: " . a:value
     endfunction
 
-    let g:editor_config_config = {
+    let g:editorconfig_config = {
           \ 'conceal_level': funcref('SetConceal')
           \ }
 <
@@ -295,7 +295,7 @@ To disable the support for a known property, define any String instead of a
 `funcref`. The content of the String is irrelevant, could be empty.
 The following disables support for the property `indent_style`:
 >
-    let g:editor_config_config = { 'indent_style': "I don't like this." }
+    let g:editorconfig_config = { 'indent_style': "I don't like this." }
 <
 
 Support Functions:
@@ -312,10 +312,10 @@ command.
                       Adds the given message as warning messages.
 
 `editorconfig#Debug(msg, ...)`
-                      If `g:editor_config_debug` is set, adds the given
+                      If `g:editorconfig_debug` is set, adds the given
                       formatted message to the list as info message. This is
                       to be used like |printf()|. Example:
-                      `editor_config_debug#Debug("Hello %s", "world")`
+                      `editorconfig#Debug("Hello %s", "world")`
 
 BTW: The function |EditorConfigPre| and |EditorConfigPost| might also be
 useful when the editorconfig plugin is extended.

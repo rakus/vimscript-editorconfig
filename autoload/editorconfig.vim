@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " autoload script of editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019-05-03T07:56:55+0200
+" Last Change: 2019-05-03T10:54:43+0200
 
 " The core plugin.
 " For documentation see ../doc/editorconfig.vim
@@ -172,7 +172,7 @@ endfunction
 
 " dictionary of supported properties
 " see :help editorconfig-extending for details
-let s:editor_config_config_default = {
+let s:editorconfig_config_default = {
       \ 'indent_style':             funcref("s:SetIndentStyle"),
       \ 'indent_size':              funcref("s:SetIndentSize"),
       \ 'tab_width':                funcref("s:SetTabWidth"),
@@ -185,47 +185,47 @@ let s:editor_config_config_default = {
       \ 'spell_check':              funcref("s:SetSpell")
       \}
 
-let s:editor_config_config = s:editor_config_config_default
+let s:editorconfig_config = s:editorconfig_config_default
 
-if exists('g:editor_config_config')
-  call extend(s:editor_config_config, g:editor_config_config)
+if exists('g:editorconfig_config')
+  call extend(s:editorconfig_config, g:editorconfig_config)
 endif
 
 " Add msg to info list
 function! editorconfig#Info(msg) abort
-  call add(b:editor_config, a:msg)
+  call add(b:editorconfig_msgs, a:msg)
 endfunction
 " Add msg to warning list
 function! editorconfig#Warning(msg) abort
-  let b:editor_config_status = get(b:, "editor_config_status", "WARNING")
-  call add(b:editor_config, "WARNING: " . a:msg)
+  let b:editorconfig_status = get(b:, "editorconfig_status", "WARNING")
+  call add(b:editorconfig_msgs, "WARNING: " . a:msg)
 endfunction
 " Add msg to warning list
 function! editorconfig#Error(msg) abort
-  let b:editor_config_error = v:true
-  let b:editor_config_status = "ERROR"
-  call add(b:editor_config, "ERROR: " . a:msg)
+  let b:editorconfig_error = v:true
+  let b:editorconfig_status = "ERROR"
+  call add(b:editorconfig_msgs, "ERROR: " . a:msg)
 endfunction
 " Add msg to info list, if debug enabled
 function! editorconfig#Debug(msg, ...) abort
-  if get(g:, 'editor_config_debug', 0) > 0
+  if get(g:, 'editorconfig_debug', 0) > 0
     " Debug might be called before buffer local vars are created.
-    if !exists("b:editor_config")
-      let b:editor_config = []
+    if !exists("b:editorconfig_msgs")
+      let b:editorconfig_msgs = []
     endif
-    call add(b:editor_config, "DEBUG: " . call('printf', [a:msg] +  a:000))
+    call add(b:editorconfig_msgs, "DEBUG: " . call('printf', [a:msg] +  a:000))
   endif
 endfunction
 
 " Add editorconfig file name, section and msg to warning list
 function! s:ParserWarning(ctx, msg) abort
-  let b:editor_config_status = get(b:, "editor_config_status", "WARNING")
-  call add(b:editor_config, "WARNING: " . a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
+  let b:editorconfig_status = get(b:, "editorconfig_status", "WARNING")
+  call add(b:editorconfig_msgs, "WARNING: " . a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
 endfunction
 " Add editorconfig file name, section and msg to error list
 function! s:ParserError(ctx, msg) abort
-  let b:editor_config_status = "ERROR"
-  call add(b:editor_config, "ERROR: " . a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
+  let b:editorconfig_status = "ERROR"
+  call add(b:editorconfig_msgs, "ERROR: " . a:ctx.file . " Section [" . a:ctx.section . "]: " . a:msg)
 endfunction
 
 " ctx: Parsing context: filename, section
@@ -238,7 +238,7 @@ function s:ProcessOption(ctx, kv) abort
     return [ key, funcref("s:NoOp") ]
   endif
 
-  let l:Cmd = s:editor_config_config[a:kv[0]]
+  let l:Cmd = s:editorconfig_config[a:kv[0]]
 
   if type(l:Cmd) == v:t_func
     let l:Cmd = funcref(l:Cmd, [ value])
@@ -341,20 +341,20 @@ function! s:ApplyEditorConfig(filename, ec_list) abort
   for ec in a:ec_list
     let fcfg = ec.fcfg
     for c in fcfg
-        if get(g:, "editor_config_debug", 0) >= 3
+        if get(g:, "editorconfig_debug", 0) >= 3
           call editorconfig#Debug('match Filename: %s -> %s', a:filename, c[0])
         endif
 
       if match(a:filename, c[0]) >=0
         call editorconfig#Debug('Applying from %s [%s]', ec['.ec_file'], c[1]['.ec_glob'])
-        if get(g:, "editor_config_debug", 0) >= 3
+        if get(g:, "editorconfig_debug", 0) >= 3
           call editorconfig#Debug('Properties: %s', string(c[1]))
         endif
 
         " context used for error/warning
         let ctx = { 'file': ec['.ec_file'], 'section': c[1]['.ec_glob'] }
         for [property, value] in items(c[1])
-          if has_key(s:editor_config_config, property)
+          if has_key(s:editorconfig_config, property)
             " process the property & value to determine statement to execute
             " in Vim
             try
@@ -431,8 +431,8 @@ function! editorconfig#HandleEditorConfig(filename, ec_files) abort
     call EditorConfigPre()
   endif
 
-  if !exists("b:editor_config")
-    let b:editor_config = []
+  if !exists("b:editorconfig_msgs")
+    let b:editorconfig_msgs = []
   endif
 
   " parse the editorconfig files until "root = true" is found
@@ -454,9 +454,9 @@ function! editorconfig#HandleEditorConfig(filename, ec_files) abort
   endif
 
   " if not quiet print a message if a error was found
-  if get(g:, "editor_config_verbose", 0) >= 0
-    let status = get(b:, "editor_config_status", "")
-    if status == "ERROR" || ( get(g:, "editor_config_verbose", 0) >= 1 &&  status == "WARNING" )
+  if get(g:, "editorconfig_verbose", 0) >= 0
+    let status = get(b:, "editorconfig_status", "")
+    if status == "ERROR" || ( get(g:, "editorconfig_verbose", 0) >= 1 &&  status == "WARNING" )
       echohl ErrorMsg
       echomsg "EditorConfig Warnings/Errors. Execute ':EditorConfigStatus' for details."
       echohl None
@@ -467,7 +467,7 @@ endfunction
 
 " print status of editor config for current buffer
 function! editorconfig#EditorConfigStatus() abort
-  if ! exists("b:editor_config")
+  if ! exists("b:editorconfig_msgs")
     echohl ErrorMsg
     echo "No EditorConfig loaded."
     echohl None
@@ -475,8 +475,8 @@ function! editorconfig#EditorConfigStatus() abort
   endif
 
   echo "EditorConfig Info:"
-  if ! empty(b:editor_config)
-    for ln in b:editor_config
+  if ! empty(b:editorconfig_msgs)
+    for ln in b:editorconfig_msgs
       if ln =~ 'WARNING: .*'
         echohl WarningMsg
       elseif ln =~ 'ERROR: .*'

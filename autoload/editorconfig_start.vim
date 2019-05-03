@@ -1,17 +1,55 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " autoload script of editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019-05-03T08:02:30+0200
+" Last Change: 2019-05-03T10:49:56+0200
 
 " The core plugin.
 " For documentation see ../doc/editorconfig.vim
+
+" TODO: delete in near future
+let s:found_old_config = ""
+if exists("g:editor_config_base_dirs")
+  let s:found_old_config .= " g:editor_config_base_dirs"
+endif
+if exists("g:editor_config_blacklist")
+  let s:found_old_config .= " g:editor_config_blacklist"
+endif
+if exists("g:editor_config_blacklist_filetype")
+  let s:found_old_config .= " g:editor_config_blacklist_filetype"
+endif
+if exists("g:editor_config_blacklist_name")
+  let s:found_old_config .= " g:editor_config_blacklist_name"
+endif
+if exists("g:editor_config_config")
+  let s:found_old_config .= " g:editor_config_config"
+endif
+if exists("g:editor_config_debug")
+  let s:found_old_config .= " g:editor_config_debug"
+endif
+if exists("g:editor_config_file")
+  let s:found_old_config .= " g:editor_config_file"
+endif
+if exists("g:editor_config_info")
+  let s:found_old_config .= " g:editor_config_info"
+endif
+if exists("g:editor_config_verbose")
+  let s:found_old_config .= " g:editor_config_verbose"
+endif
+
+if !empty(s:found_old_config)
+  echomsg "WARNING: found old confiuguration names: " . s:found_old_config
+  echomsg "See :help editorconfig-customization for new names and deleted config"
+endif
+
+
+
 
 
 " Loader for the core plugin.
 " This plugin first checks if the core of the editorconfig plugin is needed
 " before actually loading it (by calling a autoload function)
 "
-" For debugging set the variable g:editor_config_debug to 3. After loading a
+" For debugging set the variable g:editorconfig_debug to 3. After loading a
 " file check the output of `:EditorConfig status`.
 "
 " For documentation see ../doc/editorconfig.vim
@@ -70,8 +108,8 @@ endfunc
 function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
 
   " allow other filename as '.editorconfig' for testing
-  " Variable g:editor_config_file is not documented
-  let editor_config_file = get(g:, "editor_config_file", ".editorconfig")
+  " Variable g:editorconfig_file is not documented
+  let editorconfig_file = get(g:, "editorconfig_file", ".editorconfig")
 
   if !&modifiable
     return
@@ -82,17 +120,17 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
       let filename = substitute(filename, '\\', '/', 'g')
       let file_dir = substitute(file_dir, '\\', '/', 'g')
   endif
-  if get(g:, "editor_config_debug", 0) >= 3
+  if get(g:, "editorconfig_debug", 0) >= 3
     call editorconfig#Debug('Expanded Filename: "%s" -> "%s"', expand('%'), filename)
     call editorconfig#Debug('Basedir: "%s"', file_dir)
     call editorconfig#Debug('Filetype: %s', &filetype)
   endif
 
   " project base dirs
-  let editor_config_base_dirs = get(g:, "editor_config_base_dirs", [])
-  if empty(a:force) && !empty(editor_config_base_dirs)
+  let editorconfig_base_dirs = get(g:, "editorconfig_base_dirs", [])
+  if empty(a:force) && !empty(editorconfig_base_dirs)
     let found = 0
-    for basedir in editor_config_base_dirs
+    for basedir in editorconfig_base_dirs
       if stridx(filename, basedir) == 0
         let found = 1
         break
@@ -108,14 +146,14 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
   " check blacklist
   if empty(a:force)
     if !empty(&filetype)
-      for ft in get(g:, "editor_config_blacklist_filetype", [])
+      for ft in get(g:, "editorconfig_blacklist_filetype", [])
         if &filetype =~?  glob2regpat(ft)
           call editorconfig#Debug('Skipped - blacklisted filetype: %s', ft)
           return 2
         endif
       endfor
     endif
-    for glob in get(g:, "editor_config_blacklist_name", [])
+    for glob in get(g:, "editorconfig_blacklist_name", [])
       if glob[0] != '*'
         let glob = '*/' . glob
       endif
@@ -126,21 +164,21 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
     endfor
   endif
 
-  let ec_files = findfile(editor_config_file, file_dir . ';', -1)
+  let ec_files = findfile(editorconfig_file, file_dir . ';', -1)
   let ec_files = filter(ec_files, {i, v -> filereadable(v)})
   if empty(ec_files)
     " no .editorconfig files found - nothing to do
-    call editorconfig#Debug('No editorconfig files (%s) found', editor_config_file)
+    call editorconfig#Debug('No editorconfig files (%s) found', editorconfig_file)
     return 1
   endif
   call editorconfig#Debug('EditorConfig files: %s', ec_files)
 
-  if ! exists('b:editor_config_running')
+  if ! exists('b:editorconfig_running')
     try
-      let b:editor_config_running = 1
+      let b:editorconfig_running = 1
       call editorconfig#HandleEditorConfig(filename, ec_files)
     finally
-      unlet b:editor_config_running
+      unlet b:editorconfig_running
     endtry
   endif
   return 0

@@ -11,7 +11,7 @@ let PLUGIN_RTP = TEST_DIR . '/..'
 
 let s:TEST_FILE_DIR=TEST_DIR . '/editorconfig-plugin-tests/test_files/'
 
-let g:editor_config_debug = 3
+let g:editorconfig_debug = 3
 runtime plugin/editorconfig.vim
 
 execute "source " . escape(TEST_DIR, ' \')  . "/test_runner.vim"
