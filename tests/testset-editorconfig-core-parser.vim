@@ -15,17 +15,21 @@ let PLUGIN_RTP = TEST_DIR . '/..'
 
 let s:TEST_FILE_DIR=TEST_DIR . '/editorconfig-core-test/parser/'
 
+function s:appendToVar(varname, key, value)
+  execute 'let ' . a:varname . ".='" . a:key . "=". a:value . "' . \"\n\""
+endfunction
+
 " Global variable g:ecTestResult defined in test_runner.vim
 let g:editor_config_config = {
-      \ 'key':     { 'execute': "let g:ecTestResult .= 'key={v}\n'" },
-      \ 'key1':    { 'execute': "let g:ecTestResult .= 'key1={v}\n'" },
-      \ 'key2':    { 'execute': "let g:ecTestResult .= 'key2={v}\n'" },
-      \ 'key3':    { 'execute': "let g:ecTestResult .= 'key3={v}\n'" },
-      \ 'name':    { 'execute': "let g:ecTestResult .= 'name={v}\n'" },
-      \ 'option1': { 'execute': "let g:ecTestResult .= 'option1={v}\n'" },
-      \ 'option2': { 'execute': "let g:ecTestResult .= 'option2={v}\n'" },
-      \ '00000000000000000000000000000000000000000000000001': { 'execute': "let g:ecTestResult .= '00000000000000000000000000000000000000000000000001={v}\n'" },
-      \ 'k255':    { 'execute': "let g:ecTestResult .= 'k255={v}\n'" },
+      \ 'key':                                                funcref("s:appendToVar", [ "g:ecTestResult", "key" ]),
+      \ 'key1':                                               funcref("s:appendToVar", [ "g:ecTestResult", "key1" ]),
+      \ 'key2':                                               funcref("s:appendToVar", [ "g:ecTestResult", "key2" ]),
+      \ 'key3':                                               funcref("s:appendToVar", [ "g:ecTestResult", "key3" ]),
+      \ 'name':                                               funcref("s:appendToVar", [ "g:ecTestResult", "name" ]),
+      \ 'option1':                                            funcref("s:appendToVar", [ "g:ecTestResult", "option1" ]),
+      \ 'option2':                                            funcref("s:appendToVar", [ "g:ecTestResult", "option2" ]),
+      \ 'k255':                                               funcref("s:appendToVar", [ "g:ecTestResult", "k255" ]),
+      \ '00000000000000000000000000000000000000000000000001': funcref("s:appendToVar", [ "g:ecTestResult", "00000000000000000000000000000000000000000000000001" ]),
       \ }
 
 let g:editor_config_debug = 3

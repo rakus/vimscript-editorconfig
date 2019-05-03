@@ -19,11 +19,15 @@ let PLUGIN_RTP = TEST_DIR . '/..'
 
 let s:TEST_FILE_DIR=TEST_DIR . '/editorconfig-core-test/properties/'
 
+function s:appendToVar(varname, value) abort
+  execute 'let ' . a:varname . "='". a:value . "'"
+endfunction
+
 " Global variable g:ecTestResultDict defined in test_runner.vim
 let g:editor_config_config = {
-      \ 'trim_trailing_whitespace': { 'lower_case': v:true, 'execute': 'let b:trim_trailing_whitespace="{v}"' },
-      \ 'test_property': { 'execute': 'let g:ecTestResultDict["test_property"]="{v}"' },
-      \ 'testproperty': { 'execute': 'let g:ecTestResultDict["testproperty"]="{v}"' }
+      \ 'trim_trailing_whitespace': funcref("s:appendToVar", [ "b:trim_trailing_whitespace" ]),
+      \ 'test_property':            funcref("s:appendToVar", [ "g:ecTestResultDict[\"test_property\"]" ]),
+      \ 'testproperty':             funcref("s:appendToVar", [ "g:ecTestResultDict[\"testproperty\"]" ])
       \ }
 
 let g:editor_config_debug = 3
@@ -78,8 +82,9 @@ call s:addTest('lowercase_values1_ML', { 'ec_file':'lowercase_values.in', 'file'
       \ 'expect': { '&l:fileformat': 'dos', '&l:expandtab': 1 }})
 
 " test that same property values are lowercased (v0.9.0 properties)
-call s:addTest('lowercase_values2_ML', { 'ec_file':'lowercase_values.in', 'file':'test2.c',
-      \ 'expect': { '&l:fileencoding': 'utf-8',  '&l:fixendofline': 1, 'b:trim_trailing_whitespace': 'false' }})
+" VIM: Disabled. Why lower case? What if the value is a path name?
+"call s:addTest('lowercase_values2_ML', { 'ec_file':'lowercase_values.in', 'file':'test2.c',
+"      \ 'expect': { '&l:fileencoding': 'utf-8',  '&l:fixendofline': 1, 'b:trim_trailing_whitespace': 'false' }})
 
 " test that same property values are not lowercased
 call s:addTest('lowercase_values3', { 'ec_file': 'lowercase_values.in', 'file': 'test3.c',

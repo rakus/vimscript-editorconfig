@@ -1,5 +1,8 @@
-"
-" FILE: editorconfig_g2re.vim
+" editorconfig.vim: (global plugin) editorconfig support for Vim
+" glob to regex translation editorconfig plugin, see ../plugin/editorconfig.vim
+" Version:     0.1
+" Last Change: 2019-05-03T07:53:16+0200
+
 "
 " Provides editorconfig_g2re#GlobToRegEx(glob-pattern)
 "

@@ -15,18 +15,20 @@ function s:SetDirectoryOption(val)
   let &directory = a:val
 endfunction
 
+function s:SetVar(varname, value) abort
+  execute 'let ' . a:varname . "='". a:value . "'"
+endfunction
+
 let g:editor_config_config = {
-      \ 'string':    { 'execute': 'set directory={e}' },
-      \ 'string2':   { 'execute': funcref("s:SetDirectoryOption") },
-      \ 'buflocal':  { 'execute': "let b:buflocal='{v}'" },
-      \ 'buflocal2': { 'execute': 'let b:buflocal="{e}"' },
+      \ 'string':    funcref("s:SetDirectoryOption"),
+      \ 'string2':   funcref("s:SetDirectoryOption"),
+      \ 'buflocal':  funcref("s:SetVar", [ "b:buflocal" ]),
+      \ 'buflocal2': funcref("s:SetVar", [ "b:buflocal" ])
       \ }
 execute "source " . escape(TEST_DIR, ' \')  . "/test_runner.vim"
 
-let g:editor_config_blacklist = {
-      \ 'filetype': [ 'c', 'mark*'],
-      \ 'filename': [ 'ignore_by_name.txt', '*.xyz' ]
-      \ }
+let g:editor_config_blacklist_filetype = [ 'c', 'mark*']
+let g:editor_config_blacklist_name = [ '*/ignore_by_name.txt', '*.xyz' ]
 
 let s:test_desc = {}
 
@@ -39,6 +41,12 @@ endfunction
 
 " test vim extensions "spell_lang" & "spell_check"
 call s:addTest('de_de.txt', { 'file': 'de_de.txt', 'expect': { '&spelllang': 'de_de', '&spell': 1 }})
+"
+" test error message for invalid property value
+call s:addTest('inv_shift_width.txt', { 'file': 'inv_shift_width.txt', 'expect': { 'match(b:editor_config, "^ERROR:.*inv_shift_width.txt.*Invalid indent_size: .-2.") != -1 ': 1, 'b:editor_config_status': 'ERROR' }})
+
+" test warning message for invalid property value
+call s:addTest('unknown.txt', { 'file': 'unknown.txt', 'expect': { 'match(b:editor_config, "^WARNING:.*unknown.txt.*Unsupported option: unsupported = true") != -1 ': 1, 'b:editor_config_status': 'WARNING' }})
 
 " test blacklist by filename
 call s:addTest('ignore_by_name.txt', { 'file': 'ignore_by_name.txt', 'expect': { '&tabstop != 11': 1 }})
