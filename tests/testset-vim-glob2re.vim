@@ -36,12 +36,24 @@ function s:numRange2Fn(min, max)
   return map(range(a:min, a:max), {i,v -> '/' . v})
 endfunc
 
+function s:numRange2FnFmt(min, max, width)
+  let fmt="%0" . a:width . "d"
+  return map(range(a:min, a:max), {i,v -> '/' . printf(fmt, v)})
+endfunc
+
+
 call s:testG2Re('{2..17}', s:numRange2Fn(2, 17), [ '/-2', '/-1', '/0', '/1', '/18', '/117', "/017" ])
 call s:testG2Re('{-21..1217}', s:numRange2Fn(-21, 1217), [ '/-22', '/1218', '/2216' ])
 call s:testG2Re('{-21..-17}', s:numRange2Fn(-21, -17), [ '/-22', '/-16' ])
 
 " check automatic correction of range
 call s:testG2Re('{-17..-21}', s:numRange2Fn(-21, -17), [ '/-22', '/-16' ])
+
+call s:testG2Re('{02..17}', s:numRange2FnFmt(2, 17, 2), [ '/-2', '/-1', '/00', '/01', '/18', '/117', "/017" ])
+call s:testG2Re('{002..17}', s:numRange2FnFmt(2, 17, 3), [ '/-2', '/-1', '/000', '/001', '/02', '/2', '/18', '/117', "/0017" ])
+call s:testG2Re('{-021..1217}', s:numRange2FnFmt(-21, 1217, 4), [ '/-022', '/1218', '/2216' ])
+call s:testG2Re('{-21..-17}', s:numRange2FnFmt(-21, -17, 3), [ '/-22', '/-16' ])
+call s:testG2Re('{021..1217}', s:numRange2FnFmt(21, 1217, 4), [ '/020', '/1218', '/2216' ])
 
 let errors = !empty(s:testResult)
 
