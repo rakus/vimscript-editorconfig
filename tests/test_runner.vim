@@ -8,11 +8,11 @@ if !exists("g:TEST_COMPARE")
   let g:TEST_COMPARE = ""
 endif
 
-function! s:run_test(name, spec)
+function! s:run_test(name, spec) abort
   let g:ecTestResult = ""
   let g:ecTestResultDict = {}
   let g:editorconfig_info = []
-  call editorconfig#ClearCache()
+  call editorconfig_g2re#ClearCache()
 
   if has_key(a:spec, "ec_file")
     let g:editorconfig_file = a:spec.ec_file
@@ -69,16 +69,14 @@ function! RunTestSet(name, tests)
     if !empty(v:errors)
       let tst_fail += 1
       let msgs = copy(v:errors)
-      call extend(msgs, g:editorconfig_info)
+      call extend(msgs, g:editor_config_info)
       call add(all_errors, [ name, msgs])
     endif
   endfor
 
   let testResult = []
-  let failingTests = []
   if !empty(all_errors)
     for ed in all_errors
-      call add(failingTests, ed[0])
       call add(testResult, "Test: " . ed[0])
       for msg in ed[1]
         call add(testResult, "  - " . msg)
@@ -86,9 +84,6 @@ function! RunTestSet(name, tests)
     endfor
   endif
 
-  if !empty(failingTests)
-    call add(testResult, "Failed: " . string(failingTests))
-  endif
   call add(testResult, a:name . ": Tests: " . tst_count . " Failed: " . tst_fail)
 
   call writefile(testResult, $TEST_RESULT_FILE)

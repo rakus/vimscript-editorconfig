@@ -141,7 +141,7 @@ call s:addTest('number-range-simple-85', { 'file': 'number_85.num', 'expect': { 
 " call s:addTest('number-range-simple-x085', { 'file': 'number_000000000000000000085.num', 'expect': { '&tabstop': 26 }})
 
 "testing negative number-ranges
-call s:addTest('negative-number-range-simple-0' , { 'file': 'neg_number_-0.num', 'expect': { '&tabstop': 27 }})
+call s:addTest('negative-number-range-simple-0' , { 'file': 'neg_number_0.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('negative-number-range-simple-1' , { 'file': 'neg_number_-1.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('negative-number-range-simple-85', { 'file': 'neg_number_-85.num', 'expect': { '&tabstop': 27 }})
 
@@ -162,10 +162,7 @@ call s:addTest('negative-number-range-simple-85', { 'file': 'neg_number_-85.num'
 "testing negative-positive number-ranges
 call s:addTest('neg-pos-number-range-simple--85', { 'file': 'both_number_-85.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('neg-pos-number-range-simple--1' , { 'file': 'both_number_-1.num', 'expect': { '&tabstop': 27 }})
-call s:addTest('neg-pos-number-range-simple--0' , { 'file': 'both_number_-0.num', 'expect': { '&tabstop': 27 }})
-call s:addTest('neg-pos-number-range-simple-+0' , { 'file': 'both_number_+0.num', 'expect': { '&tabstop': 27 }})
-call s:addTest('neg-pos-number-range-simple-+1' , { 'file': 'both_number_+1.num', 'expect': { '&tabstop': 27 }})
-call s:addTest('neg-pos-number-range-simple-+85', { 'file': 'both_number_+85.num', 'expect': { '&tabstop': 27 }})
+call s:addTest('neg-pos-number-range-simple--0' , { 'file': 'both_number_0.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('neg-pos-number-range-simple-0' , { 'file': 'both_number_0.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('neg-pos-number-range-simple-1' , { 'file': 'both_number_1.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('neg-pos-number-range-simple-85', { 'file': 'both_number_85.num', 'expect': { '&tabstop': 27 }})
@@ -183,8 +180,8 @@ call s:addTest('neg-pos-number-range-simple-85', { 'file': 'both_number_85.num',
 " call s:addTest('neg-pos-number-range-simple-0085', { 'file': 'both_number_0085.num', 'expect': { '&tabstop': 27 }})
 
 "testing number-ranges not octl
-call s:addTest('number-range-no-octal1', { 'file': 'oct_number_10.num', 'expect': { '&tabstop': 28 }})
-call s:addTest('number-range-no-octal2', { 'file': 'oct_number_20.num', 'expect': { '&tabstop': 28 }})
+call s:addTest('number-range-no-octal1', { 'file': 'oct_number_010.num', 'expect': { '&tabstop': 28 }})
+call s:addTest('number-range-no-octal2', { 'file': 'oct_number_020.num', 'expect': { '&tabstop': 28 }})
 call s:addTest('number-range-no-octal3', { 'file': 'oct_number_8.num', 'expect': { '&tabstop==28': 0 }})
 
 execute "cd " . s:TEST_FILE_DIR

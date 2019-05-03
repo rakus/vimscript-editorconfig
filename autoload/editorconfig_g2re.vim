@@ -35,6 +35,10 @@ lockvar s:g2rNormal s:g2rInBrackets s:g2rInBraces
 let s:NUM_RANGE = '[-+]\?\d\+\.\.[-+]\?\d\+'
 lockvar s:NUM_RANGE
 
+function editorconfig_g2re#ClearCache()
+  let s:glob2re_cache = {}
+endfunction
+
 
 function editorconfig_g2re#GlobToRegEx(pat) abort
   if has_key(s:glob2re_cache, a:pat)
@@ -66,49 +70,82 @@ function editorconfig_g2re#GlobToRegEx(pat) abort
   return re
 endfunction
 
-function s:numRangeRegexParts(min, max, append) abort
+function! s:numRangeRegexParts(digits, min, max, append) abort
+  "echo printf('numRangeRegexParts(%d, %d, %d, %s)', a:digits, a:min, a:max, a:append)
   let parts = []
+  let width = a:digits <= 0 ? 0 : a:digits
+  let pfmt = "%0" . width . "d"
+  let pfmt_tenth = "%0" . (width > 0? width-1:0) . "d"
+  "echo "FMT: " . pfmt . " - " . pfmt_tenth
   if a:min == a:max
-    call add(parts, string(a:min). a:append)
+    call add(parts, printf(pfmt, a:min) . a:append)
+    "echo "Added1: " . parts[-1]
   elseif (a:min/10) == (a:max/10)
-    call add(parts, strpart(a:min, 0, len(a:min)-1) . '[' . (a:min%10) . '-' . (a:max%10) . ']'. a:append)
+    call add(parts, printf(pfmt_tenth, (a:min/10)) . '[' . (a:min%10) . '-' . (a:max%10) . ']' . a:append)
+    "echo "Added2: " . parts[-1]
   else
     let new_min = ((a:min/10)+1)*10
     let new_max = ((a:max/10))*10
     if(new_min != a:min)
       if (a:min%10) == 9
-        call add(parts, string(a:min) . a:append)
+        call add(parts, printf(pfmt, a:min) . a:append)
+        "echo "Added3: " . parts[-1]
       else
-        call add(parts, strpart(a:min, 0, len(a:min)-1) . '[' . (a:min%10) . '-9]' . a:append)
+        if width > 0 || a:min >= 10
+          call add(parts, printf(pfmt_tenth, (a:min/10)) . '[' . (a:min%10) . '-9]' . a:append)
+        else
+          call add(parts, '[' . (a:min%10) . '-9]' . a:append)
+        endif
+        "echo "Added4: " . parts[-1]
       endif
     endif
     if new_min != new_max
-      call extend(parts, s:numRangeRegexParts(new_min/10, (new_max/10)-1, '[0-9]' . a:append))
+      call extend(parts, s:numRangeRegexParts(a:digits-1, new_min/10, (new_max/10)-1, '\d' . a:append))
     endif
-      if (a:max%10) == 0
-        call add(parts, string(a:max) . a:append)
-      else
-        "call add(parts, strpart(a:max, 0, len(a:max)-1) .  '[0-' . (a:max%10) . ']' . a:append)
-        call extend(parts, s:numRangeRegexParts(new_max/10, a:max/10, '[0-' . (a:max%10) . ']' . a:append))
-      endif
+    if (a:max%10) == 0
+      call add(parts, printf(pfmt, a:max) . a:append)
+      "echo "Added5: " . parts[-1]
+    else
+      call extend(parts, s:numRangeRegexParts(a:digits-1, new_max/10, a:max/10, '[0-' . (a:max%10) . ']' . a:append))
+    endif
   endif
 
   return parts
 endfunction
 
-function s:GlobRange2Re(lower, upper) abort
+" external callable for testing
+function editorconfig_g2re#GlobRange2Re(lower, upper) abort
+  "echo printf("editorconfig_g2re#GlobRange2Re(%s, %s)", a:lower, a:upper)
+
+  let digits = -1
+  "Special Handling leading zeros. Disabled for now ...
+  if match(a:lower, '^[-+]\?0\d') == 0 || match(a:upper, '^[-+]\?0\d') == 0
+    let digits = max([ strlen(substitute(a:lower, "[+]", "", "")), strlen(substitute(a:upper, "[+]", "", "")) ] )
+  else
+    let digits = -1
+  endif
 
   let low_num = str2nr(a:lower, 10)
   let up_num = str2nr(a:upper, 10)
 
   let start = min([low_num, up_num])
   let end = max([low_num, up_num])
+
+  if start == end
+    return (strlen(a:lower) > strlen(a:upper) ? a:lower : a:upper)
+  endif
+
   let neg=''
   if start < 0
-    let new_start = end < 0 ? -end : 0
+    let new_start = end < 0 ? -end : 1
     let new_end = start * -1
-    let result = s:numRangeRegexParts(new_start, new_end, '')
-    let neg =  '-\%(' . join(result, '\|') . '\)'
+    let neg_digits = digits
+    if(end >= 0)
+      let neg_digits -= 1
+    endif
+
+    let result = s:numRangeRegexParts(neg_digits, new_start, new_end, '')
+    let neg =  '-' . join(result, '\|-')
     if end < 0
       return '\%(' . neg . '\)'
     else
@@ -116,9 +153,9 @@ function s:GlobRange2Re(lower, upper) abort
     endif
     let start = 0
   endif
-  let result = s:numRangeRegexParts(start, end, '')
+  let result = s:numRangeRegexParts(digits, start, end, '')
 
-  return '\%(' . neg . '+\?\%(' . join(result, '\|') . '\)\)'
+  return '\%(' . neg .  join(result, '\|') . '\)'
 
 endfunction
 
@@ -147,7 +184,6 @@ endfunction
 " Searches for a closing '}' and returns a array with its index and whether a
 " comma was found.
 " This also handles inner {}.
-" TODO: Do we need to handle [] here?
 function s:getClosingBracesIndex(pat, idx) abort
   let len = len(a:pat)
   let wlk = a:idx
@@ -162,6 +198,11 @@ function s:getClosingBracesIndex(pat, idx) abort
       elseif icomma
         let has_comma = v:true
       endif
+    elseif a:pat[wlk] == '{'
+        let iwlk = s:getClosingBracketIndex(a:pat, idx)
+        if iwlk >= 0
+          let wlk = iwlk
+        endif
     endif
     if a:pat[wlk] == '\'
       let wlk +=1
@@ -239,7 +280,7 @@ function s:GlobToRegExInt(pat,state) abort
             let num_range = matchstr(partStr, s:NUM_RANGE)
             if !empty(num_range)
               let bounds = eval(substitute(num_range, '^\([-+]\?\d\+\)\.\.\([-+]\?\d\+\)$', "[ '\\1', '\\2' ]", ''))
-              let re .= s:GlobRange2Re(bounds[0], bounds[1])
+              let re .= editorconfig_g2re#GlobRange2Re(bounds[0], bounds[1])
             else
               let inner = s:GlobToRegExInt(a:pat[idx:(wlk-1)], s:g2rNormal)
               let re .= '{' . inner . '}'
@@ -265,7 +306,6 @@ function s:GlobToRegExInt(pat,state) abort
         let idx += 3
       else
         let re .= s:RE_FSEP
-        " '/'
       endif
     elseif c == '\'
       if idx < length

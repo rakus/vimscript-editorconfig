@@ -7,7 +7,7 @@
 
 let s:tst_count = 0
 let s:tst_fail = 0
-let testResult = []
+let s:testResult = []
 
 function s:testG2Re(glob, matchList, noMatchList)
   let s:tst_count += 1
@@ -25,9 +25,9 @@ function s:testG2Re(glob, matchList, noMatchList)
   if !empty(v:errors)
     let s:tst_fail += 1
 
-    call add(testResult, "testG2RE - " . a:glob)
+    call add(s:testResult, "testG2RE - " . a:glob)
     for err in v:errors
-      call add(testResult, " - " . err)
+      call add(s:testResult, " - " . err)
     endfor
   endif
 endfunction
@@ -43,11 +43,11 @@ call s:testG2Re('{-21..-17}', s:numRange2Fn(-21, -17), [ '/-22', '/-16' ])
 " check automatic correction of range
 call s:testG2Re('{-17..-21}', s:numRange2Fn(-21, -17), [ '/-22', '/-16' ])
 
-let errors = !empty(testResult)
+let errors = !empty(s:testResult)
 
-call add(testResult, "vim-glob2re: Tests: " . s:tst_count . " Failed: " . s:tst_fail)
+call add(s:testResult, "vim-glob2re: Tests: " . s:tst_count . " Failed: " . s:tst_fail)
 
-call writefile(testResult, $TEST_RESULT_FILE)
+call writefile(s:testResult, $TEST_RESULT_FILE)
 
 if errors
   cq!
