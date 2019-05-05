@@ -70,29 +70,32 @@ function editorconfig_g2re#GlobToRegEx(pat) abort
   return re
 endfunction
 
-function! s:numRangeRegexParts(digits, min, max, append) abort
+function s:numRangeRegexParts(digits, min, max, append) abort
   "echo printf('numRangeRegexParts(%d, %d, %d, %s)', a:digits, a:min, a:max, a:append)
   let parts = []
   let width = a:digits <= 0 ? 0 : a:digits
-  let pfmt = "%0" . width . "d"
-  let pfmt_tenth = "%0" . (width > 0? width-1:0) . "d"
-  "echo "FMT: " . pfmt . " - " . pfmt_tenth
+  let width10s =  width > 0 ? width-1 : 0
+
   if a:min == a:max
-    call add(parts, printf(pfmt, a:min) . a:append)
+    call add(parts, printf("%0*d%s", width, a:min, a:append))
     "echo "Added1: " . parts[-1]
   elseif (a:min/10) == (a:max/10)
-    call add(parts, printf(pfmt_tenth, (a:min/10)) . '[' . (a:min%10) . '-' . (a:max%10) . ']' . a:append)
+    if a:min > 10
+      call add(parts, printf("%0*d[%d-%d]%s", width10s, a:min/10, a:min%10, a:max%10, a:append))
+    else
+      call add(parts, printf("%[%d-%d]%s", a:min%10, a:max%10, a:append))
+    endif
     "echo "Added2: " . parts[-1]
   else
     let new_min = ((a:min/10)+1)*10
     let new_max = ((a:max/10))*10
     if(new_min != a:min)
       if (a:min%10) == 9
-        call add(parts, printf(pfmt, a:min) . a:append)
+        call add(parts, printf("%0*d%s", width, a:min, a:append))
         "echo "Added3: " . parts[-1]
       else
         if width > 0 || a:min >= 10
-          call add(parts, printf(pfmt_tenth, (a:min/10)) . '[' . (a:min%10) . '-9]' . a:append)
+          call add(parts, printf("%0*d[%d-9]%s", width10s, a:min/10, a:min%10, a:append))
         else
           call add(parts, '[' . (a:min%10) . '-9]' . a:append)
         endif
@@ -103,7 +106,7 @@ function! s:numRangeRegexParts(digits, min, max, append) abort
       call extend(parts, s:numRangeRegexParts(a:digits-1, new_min/10, (new_max/10)-1, '\d' . a:append))
     endif
     if (a:max%10) == 0
-      call add(parts, printf(pfmt, a:max) . a:append)
+      call add(parts, printf("%0*d%s", width, a:max, a:append))
       "echo "Added5: " . parts[-1]
     else
       call extend(parts, s:numRangeRegexParts(a:digits-1, new_max/10, a:max/10, '[0-' . (a:max%10) . ']' . a:append))
