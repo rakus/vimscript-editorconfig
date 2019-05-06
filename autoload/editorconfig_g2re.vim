@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " glob to regex translation editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019-05-06T07:27:16+0200
+" Last Change: 2019-05-06T10:28:07+0200
 
 "
 " Provides editorconfig_g2re#GlobToRegEx(glob-pattern)
@@ -75,12 +75,13 @@ function s:numRangeRegexParts(digits, min, max, append) abort
   let parts = []
   let width = a:digits <= 0 ? 0 : a:digits
   let width10s =  width > 0 ? width-1 : 0
+  "echo "width: " . width . " width10s " . width10s
 
   if a:min == a:max
     call add(parts, printf("%0*d%s", width, a:min, a:append))
     "echo "Added1: " . parts[-1]
   elseif (a:min/10) == (a:max/10)
-    if a:min > 10
+    if a:min > 10  || width10s > 0
       call add(parts, printf("%0*d[%d-%d]%s", width10s, a:min/10, a:min%10, a:max%10, a:append))
     else
       call add(parts, printf("%[%d-%d]%s", a:min%10, a:max%10, a:append))
@@ -121,12 +122,13 @@ function editorconfig_g2re#GlobRange2Re(lower, upper) abort
   "echo printf("editorconfig_g2re#GlobRange2Re(%s, %s)", a:lower, a:upper)
 
   let digits = -1
-  "Special Handling leading zeros. Disabled for now ...
+  "Special Handling leading zeros.
   if match(a:lower, '^[-+]\?0\d') == 0 || match(a:upper, '^[-+]\?0\d') == 0
     let digits = max([ strlen(substitute(a:lower, "[+]", "", "")), strlen(substitute(a:upper, "[+]", "", "")) ] )
   else
     let digits = -1
   endif
+  "echo "digits: " . digits
 
   let low_num = str2nr(a:lower, 10)
   let up_num = str2nr(a:upper, 10)
@@ -146,6 +148,7 @@ function editorconfig_g2re#GlobRange2Re(lower, upper) abort
     if(end >= 0)
       let neg_digits -= 1
     endif
+    "echo "neg_digits: " . neg_digits
 
     let result = s:numRangeRegexParts(neg_digits, new_start, new_end, '')
     let neg =  '-' . join(result, '\|-')
@@ -201,11 +204,6 @@ function s:getClosingBracesIndex(pat, idx) abort
       elseif icomma
         let has_comma = v:true
       endif
-    elseif a:pat[wlk] == '{'
-        let iwlk = s:getClosingBracketIndex(a:pat, idx)
-        if iwlk >= 0
-          let wlk = iwlk
-        endif
     endif
     if a:pat[wlk] == '\'
       let wlk +=1
