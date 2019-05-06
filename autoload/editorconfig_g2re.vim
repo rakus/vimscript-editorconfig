@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " glob to regex translation editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019-05-03T07:53:16+0200
+" Last Change: 2019-05-06T07:27:16+0200
 
 "
 " Provides editorconfig_g2re#GlobToRegEx(glob-pattern)
@@ -29,9 +29,11 @@ endif
 let s:g2rNormal = 0
 let s:g2rInBrackets = 1
 let s:g2rInBraces = 2
+lockvar s:g2rNormal s:g2rInBrackets s:g2rInBraces
 "
 " a number range like '1..5' or '-5..+3'
-let s:NUM_RANG = '[-+]\?\d\+\.\.[-+]\?\d\+'
+let s:NUM_RANGE = '[-+]\?\d\+\.\.[-+]\?\d\+'
+lockvar s:NUM_RANGE
 
 
 function editorconfig_g2re#GlobToRegEx(pat) abort
@@ -121,13 +123,16 @@ function s:GlobRange2Re(lower, upper) abort
 endfunction
 
 " Searches for a closing ']'  and returns its index.
-" if no closing bracket is found or a '/' is found before the closing bracket,
-" -1 is returned.
-function s:getClosingBracketIndex(pat, idx) abort
+" if no closing bracket is found or a '/' is found before the closing bracket
+" -1 is returned. Also returns -1 if a unescaped ',' is found and state ==
+"  s:g2rInBraces.
+function s:getClosingBracketIndex(pat, idx, state) abort
   let len = len(a:pat)
   let wlk = a:idx
   while wlk < len && a:pat[wlk] != ']'
     if a:pat[wlk] == '/'
+      return -1
+    elseif a:pat[wlk] == ',' && a:state == s:g2rInBraces
       return -1
     endif
     if a:pat[wlk] == '\'
@@ -184,7 +189,7 @@ function s:unescape(pat, start, end) abort
   return unesc
 endfunction
 
-function s:GlobToRegExInt(pat,type) abort
+function s:GlobToRegExInt(pat,state) abort
 
   let length = len(a:pat)
   let brace_level = 0
@@ -203,11 +208,12 @@ function s:GlobToRegExInt(pat,type) abort
     elseif c == '?'
       let re .= '.'
     elseif c == '['
-      if a:type == s:g2rInBrackets
+      if a:state == s:g2rInBrackets
         let re .= '\['
       else
-        let wlk = s:getClosingBracketIndex(a:pat, idx)
+        let wlk = s:getClosingBracketIndex(a:pat, idx, a:state)
         if wlk < 0
+          " not closed OR '/' found OR ',' found and state == s:g2rInBraces
           let re .= '\['
         else
           if a:pat[idx] == '!' || a:pat[idx] == '^'
@@ -230,7 +236,7 @@ function s:GlobToRegExInt(pat,type) abort
         if wlk >= 0
           if !has_comma
             let partStr = join(a:pat[idx:(wlk-1)], '')
-            let num_range = matchstr(partStr, s:NUM_RANG)
+            let num_range = matchstr(partStr, s:NUM_RANGE)
             if !empty(num_range)
               let bounds = eval(substitute(num_range, '^\([-+]\?\d\+\)\.\.\([-+]\?\d\+\)$', "[ '\\1', '\\2' ]", ''))
               let re .= s:GlobRange2Re(bounds[0], bounds[1])
@@ -248,7 +254,7 @@ function s:GlobToRegExInt(pat,type) abort
           let re .= '{'
         endif
     elseif c == ','
-      if a:type == s:g2rInBraces
+      if a:state == s:g2rInBraces
         let re .= '\|'
       else
         let re .= ','
