@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " autoload script of editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019-05-03T10:54:43+0200
+" Last Change: 2019-05-14T05:52:20+0200
 
 " The core plugin.
 " For documentation see ../doc/editorconfig.vim
@@ -143,7 +143,17 @@ function s:SetFileEncoding(value) abort
   endif
 endfunction
 
+let s:MAX_LINE_COLOR_GROUP = "EditorConfigMaxLineLen"
 function s:SetMaxLineLength(value) abort
+
+  if hlexists(s:MAX_LINE_COLOR_GROUP) != 0
+    for m in getmatches()
+      if m.group == s:MAX_LINE_COLOR_GROUP
+        call matchdelete(m.id)
+      endif
+    endfor
+  endif
+
   if a:value == 'off'
     " TODO: Or use 0?
     let maxLen =  &l:textwidth
@@ -151,6 +161,24 @@ function s:SetMaxLineLength(value) abort
     let maxLen = s:PositiveInteger('max_line_length', a:value)
   endif
   let &l:textwidth = maxLen
+
+  let cfg = get(g:, "editorconfig_max_line_length_visual", "none")
+
+  if cfg == "exceed"
+    if hlexists(s:MAX_LINE_COLOR_GROUP) == 0
+      execute "highlight link " . s:MAX_LINE_COLOR_GROUP . " ColorColumn"
+    endif
+
+    call matchadd(s:MAX_LINE_COLOR_GROUP, '\%>' . maxLen . 'v.\+', 100)
+  elseif cfg == "ruler"
+    setlocal colorcolumn=+1
+  elseif cfg == "none"
+    " do nothing
+  else
+    call editorconfig#Warning("Invalid value for g:editorconfig_max_line_length_visual ignored: " . cfg)
+    " do nothing
+  endif
+
 endfunction
 
 function s:SetSpellLang(value) abort
