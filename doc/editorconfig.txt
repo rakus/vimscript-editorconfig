@@ -90,7 +90,7 @@ Note, that all properties support the special value `unset`. This makes it a
 like `[*]`.
 
 If a property has a invalid value, that property is silently ignored. Use the
-command |:EditorConfigStatus| to display warning messages.
+command |:EditorConfig|Status| to display warning messages.
 
 `indent_style`            Value: `tab`, `space`
                         Defines whether tabs or spaces should be used for
