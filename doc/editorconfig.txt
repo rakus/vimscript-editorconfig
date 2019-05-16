@@ -1,4 +1,4 @@
-*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 May 14
+*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 May 16
 
                   EDITOR CONFIG FOR VIM   by Ralf Schandl
 
@@ -90,7 +90,7 @@ Note, that all properties support the special value `unset`. This makes it a
 like `[*]`.
 
 If a property has a invalid value, that property is silently ignored. Use the
-command |:EditorConfig|Status| to display warning messages.
+command |:EditorConfigStatus| to display warning messages.
 
 `indent_style`            Value: `tab`, `space`
                         Defines whether tabs or spaces should be used for
@@ -137,7 +137,7 @@ command |:EditorConfig|Status| to display warning messages.
 
 `max_line_length`         Value: `off` or a positive number
                         Sets the option |'textwidth'|.
-                        If the value is `off`, |'textwidth'|is untouched
+                        If the value is `off`, |'textwidth'| is untouched
                         (whatever it was set before)`.
 
 
@@ -162,13 +162,13 @@ might change!
 ==============================================================================
 3. Commands                                   *editorconfig-cmd* *:EditorConfig*
 
-                                                           *EditorConfigApply*
+                                                          *:EditorConfigApply*
 :EditorConfigApply[!]   (Re)Applies editorconfig settings to the current file.
                         If `!` is given, ignores |g:editorconfig_blacklist|
                         and |g:editorconfig_base_dirs| and also applies the
                         settings to files that normally would be ignored.
 
-                                                          *EditorConfigStatus*
+                                                         *:EditorConfigStatus*
 :EditorConfigStatus     This command prints information about the editorconfig
                         applied to the current file. It prints applied
                         settings, warning and error messages.
@@ -244,27 +244,27 @@ might change!
                          -1: Don't print any message. (Not recommended)
 
                         Independent of this setting all messages are viewable
-                        with the command |EditorConfigStatus|.
+                        with the command |:EditorConfigStatus|.
 
 `g:editorconfig_debug`    Numerical variable. If set, debug messages are added
-                        to the editorconfig info and are displayable with
-                        |:EditorConfigStatus|. Higher numbers, mean more debug
-                        messages.
+                        to the editorconfig info and are displayable with the
+                        command |:EditorConfigStatus|. Higher numbers, mean
+                        more debug messages.
 
 `g:editorconfig_max_line_length_visual`
                         Determines how the property `max_line_length` is
-			visually displayed. Possible values:
+                        visually displayed. Possible values:
 
-			`none`: (default) No visual feedback is activated.
+                        `none`: (default) No visual feedback is activated.
 
-			`exceed`: All characters beyond `max_line_length` are
-			highlighted with the color defined for
-			|hl-ColorColumn|.
+                        `exceed`: All characters beyond `max_line_length` are
+                        highlighted with the color defined for
+                        |hl-ColorColumn|.
 
-			`ruler`: The option |'colorcolumn'| is set. It is
-			set to the first column beyond `max_line_length`.
+                        `ruler`: The option |'colorcolumn'| is set. It is
+                        set to the first column beyond `max_line_length`.
 
-			Any other value is silently ignored.
+                        Any other value is silently ignored.
 
 
 `EditorConfigPre()`       If a function with this name exists, it is called
@@ -318,7 +318,7 @@ Support Functions:
 ------------------
 
 Editorconfig provides three functions to add messages to its message
-list. This messages can later be displayed with the |:EditorConfig|Status|
+list. This messages can later be displayed with the |:EditorConfigStatus|
 command.
 
 `editorconfig#Info(msg)`
