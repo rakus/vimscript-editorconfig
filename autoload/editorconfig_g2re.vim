@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " glob to regex translation editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019-05-06T07:27:16+0200
+" Last Change: 2019 May 20
 
 "
 " Provides editorconfig_g2re#GlobToRegEx(glob-pattern)
@@ -66,131 +66,7 @@ function editorconfig_g2re#GlobToRegEx(pat) abort
   return re
 endfunction
 
-function s:numRangeRegexParts(min, max, append) abort
-  let parts = []
-  if a:min == a:max
-    call add(parts, string(a:min). a:append)
-  elseif (a:min/10) == (a:max/10)
-    call add(parts, strpart(a:min, 0, len(a:min)-1) . '[' . (a:min%10) . '-' . (a:max%10) . ']'. a:append)
-  else
-    let new_min = ((a:min/10)+1)*10
-    let new_max = ((a:max/10))*10
-    if(new_min != a:min)
-      if (a:min%10) == 9
-        call add(parts, string(a:min) . a:append)
-      else
-        call add(parts, strpart(a:min, 0, len(a:min)-1) . '[' . (a:min%10) . '-9]' . a:append)
-      endif
-    endif
-    if new_min != new_max
-      call extend(parts, s:numRangeRegexParts(new_min/10, (new_max/10)-1, '[0-9]' . a:append))
-    endif
-      if (a:max%10) == 0
-        call add(parts, string(a:max) . a:append)
-      else
-        "call add(parts, strpart(a:max, 0, len(a:max)-1) .  '[0-' . (a:max%10) . ']' . a:append)
-        call extend(parts, s:numRangeRegexParts(new_max/10, a:max/10, '[0-' . (a:max%10) . ']' . a:append))
-      endif
-  endif
-
-  return parts
-endfunction
-
-function s:GlobRange2Re(lower, upper) abort
-
-  let low_num = str2nr(a:lower, 10)
-  let up_num = str2nr(a:upper, 10)
-
-  let start = min([low_num, up_num])
-  let end = max([low_num, up_num])
-  let neg=''
-  if start < 0
-    let new_start = end < 0 ? -end : 0
-    let new_end = start * -1
-    let result = s:numRangeRegexParts(new_start, new_end, '')
-    let neg =  '-\%(' . join(result, '\|') . '\)'
-    if end < 0
-      return '\%(' . neg . '\)'
-    else
-      let neg .=  '\|'
-    endif
-    let start = 0
-  endif
-  let result = s:numRangeRegexParts(start, end, '')
-
-  return '\%(' . neg . '+\?\%(' . join(result, '\|') . '\)\)'
-
-endfunction
-
-" Searches for a closing ']'  and returns its index.
-" if no closing bracket is found or a '/' is found before the closing bracket
-" -1 is returned. Also returns -1 if a unescaped ',' is found and state ==
-"  s:g2rInBraces.
-function s:getClosingBracketIndex(pat, idx, state) abort
-  let len = len(a:pat)
-  let wlk = a:idx
-  while wlk < len && a:pat[wlk] != ']'
-    if a:pat[wlk] == '/'
-      return -1
-    elseif a:pat[wlk] == ',' && a:state == s:g2rInBraces
-      return -1
-    endif
-    if a:pat[wlk] == '\'
-      let wlk +=1
-    endif
-    let wlk +=1
-  endwhile
-
-  return wlk >= len? -1 : wlk
-endfunction
-
-" Searches for a closing '}' and returns a array with its index and whether a
-" comma was found.
-" This also handles inner {}.
-" TODO: Do we need to handle [] here?
-function s:getClosingBracesIndex(pat, idx) abort
-  let len = len(a:pat)
-  let wlk = a:idx
-  let has_comma = v:false
-  while wlk < len && a:pat[wlk] != '}'
-    if a:pat[wlk] == ','
-      let has_comma = v:true
-    elseif a:pat[wlk] == '{'
-      let [iwlk, icomma ] = s:getClosingBracesIndex(a:pat, wlk+1)
-      if iwlk >= 0
-        let wlk = iwlk
-      elseif icomma
-        let has_comma = v:true
-      endif
-    endif
-    if a:pat[wlk] == '\'
-      let wlk +=1
-    endif
-    let wlk +=1
-  endwhile
-
-  if wlk >= len
-    let wlk = -1
-  endif
-  return [ wlk, has_comma ]
-endfunction
-
-" Unescapes the part of the character array.
-function s:unescape(pat, start, end) abort
-  let wlk = a:start
-  let unesc = ''
-  while wlk < a:end
-    if a:pat[wlk] == '\'
-      let wlk += 1
-    endif
-    let unesc .= a:pat[wlk]
-    let wlk += 1
-  endwhile
-  return unesc
-endfunction
-
 function s:GlobToRegExInt(pat,state) abort
-
   let length = len(a:pat)
   let brace_level = 0
   let re = ''
@@ -281,5 +157,212 @@ function s:GlobToRegExInt(pat,state) abort
   return re
 endfunction
 
+" Searches for a closing ']'  and returns its index.
+" if no closing bracket is found or a '/' is found before the closing bracket
+" -1 is returned. Also returns -1 if a unescaped ',' is found and state ==
+"  s:g2rInBraces.
+function s:getClosingBracketIndex(pat, idx, state) abort
+  let len = len(a:pat)
+  let wlk = a:idx
+  while wlk < len && a:pat[wlk] != ']'
+    if a:pat[wlk] == '/'
+      return -1
+    elseif a:pat[wlk] == ',' && a:state == s:g2rInBraces
+      return -1
+    endif
+    if a:pat[wlk] == '\'
+      let wlk +=1
+    endif
+    let wlk +=1
+  endwhile
+
+  return wlk >= len? -1 : wlk
+endfunction
+
+" Searches for a closing '}' and returns a array with its index and whether a
+" comma was found.
+" This also handles inner {}.
+" TODO: Do we need to handle [] here?
+function s:getClosingBracesIndex(pat, idx) abort
+  let len = len(a:pat)
+  let wlk = a:idx
+  let has_comma = v:false
+  while wlk < len && a:pat[wlk] != '}'
+    if a:pat[wlk] == ','
+      let has_comma = v:true
+    elseif a:pat[wlk] == '{'
+      let [iwlk, icomma ] = s:getClosingBracesIndex(a:pat, wlk+1)
+      if iwlk >= 0
+        let wlk = iwlk
+      elseif icomma
+        let has_comma = v:true
+      endif
+    endif
+    if a:pat[wlk] == '\'
+      let wlk +=1
+    endif
+    let wlk +=1
+  endwhile
+
+  if wlk >= len
+    let wlk = -1
+  endif
+  return [ wlk, has_comma ]
+endfunction
+
+" Unescapes the part of the character array.
+function s:unescape(pat, start, end) abort
+  let wlk = a:start
+  let unesc = ''
+  while wlk < a:end
+    if a:pat[wlk] == '\'
+      let wlk += 1
+    endif
+    let unesc .= a:pat[wlk]
+    let wlk += 1
+  endwhile
+  return unesc
+endfunction
+
+
+" Create regular expression to match the number range lower to upper
+function s:GlobRange2Re(lower, upper) abort
+  "Special Handling leading zeros.
+  let width = -1
+  " If bash-like justified numbers are wanted, enable the following
+  "if match(a:lower, '^[-+]\?0\d') == 0 || match(a:upper, '^[-+]\?0\d') == 0
+  "  let width = max([ strlen(substitute(a:lower, "+", "", "")), strlen(substitute(a:upper, "+", "", "")) ] )
+  "endif
+
+  let low_num = str2nr(a:lower, 10)
+  let up_num = str2nr(a:upper, 10)
+
+  let start = min([low_num, up_num])
+  let end = max([low_num, up_num])
+  let neg=''
+  if start < 0
+    let new_start = end < 0 ? -end : 0
+    let new_end = start * -1
+    let neg = s:num_re(width, new_start, new_end, '')
+    let neg =  '-\%(' . neg . '\)'
+    if end < 0
+      return '\%(' . neg . '\)'
+    else
+      let neg .=  '\|'
+    endif
+    let start = 0
+  endif
+  let pos = s:num_re(width, start, end, '')
+
+  return '\%(' . neg . '+\?\%(' . pos . '\)\)'
+
+endfunction
+
+
+function s:num_re(a_width, min, max, suffix)
+  let width    = a:a_width > 0 ? a:a_width : 0
+  let width10s = a:a_width > 0 ? a:a_width - 1 : 0
+
+  if a:min == a:max
+    if a:min == 0 && width < 1
+      return a:suffix
+    else
+      return printf("%0*d%s", width, a:min, a:suffix)
+    endif
+  endif
+  if a:min/10 == a:max/10
+    if a:min >= 10 || width10s > 0
+      return printf("%0*d[%d-%d]%s", width10s, a:min/10, a:min%10, a:max%10, a:suffix)
+    else
+      return printf("[%d-%d]%s", a:min%10, a:max%10, a:suffix)
+    endif
+  endif
+
+  let re = ""
+
+  " if min is not divisible by 10, create re to match the gap to the next
+  " number divisable by 10
+  if a:min%10 != 0
+    let new_min = (a:min/10+1)*10
+    let re .= s:num_re(width, a:min, new_min-1, a:suffix)
+  else
+    let new_min = a:min
+  endif
+
+  " move new_min forward to have the same number of digits like max
+  " create the needed re
+  let new_suffix=a:suffix . "[0-9]"
+  let div = 1
+  while(s:digits(new_min) < s:digits(a:max))
+    let div = div * 10
+    let next_min = float2nr(pow(10, s:digits(new_min)))
+    if re != ""
+      let re .= "\\|"
+    endif
+    let re .= s:num_re(width-s:digits(new_min), new_min/div, (next_min-1)/div, new_suffix)
+    let new_min = next_min
+    let new_suffix .= "[0-9]"
+  endwhile
+
+  " new_min now has the same number of digits like max
+  let div = float2nr(pow(10, s:digits(new_min)-1))
+  while div > 1
+    let new_max = (a:max / div)*div
+    if (new_max + div-1) == a:max
+      " special handling for numbers ending with '9'
+      " We can handle it in this loop.
+      let new_max = a:max
+    endif
+    if new_min != new_max
+      let x=div
+      let new_suffix=""
+      while x > 1
+        let new_suffix .= "[0-9]"
+        let x = x/10
+      endwhile
+      if re != ""
+        let re .= "\\|"
+      endif
+      let re .= s:num_re(width-s:digits(new_min), new_min/div, (new_max-1)/div, new_suffix)
+    endif
+    let new_min = new_max
+    let div = div/10
+  endwhile
+
+  if new_min < a:max
+    if re != ""
+      let re .= "\\|"
+    endif
+    let re .= s:num_re(width10s, new_min/10, (a:max)/10, printf("[0-%d]", a:max%10))
+  elseif new_min%10 != 9
+    if re != ""
+      let re .= "\\|"
+    endif
+    let re .= printf("%d", a:max)
+    " else: The number ended with '9'/'99'/'999'... and was handled in the loop above
+  endif
+
+  return re
+endfunction
+
+function s:digits(num)
+  if a:num < 10
+    return 1
+  elseif a:num < 10
+    return 1
+  elseif a:num < 100
+    return 2
+  elseif a:num < 1000
+    return 3
+  else
+    let n = a:num/1000
+    let d=3
+    while n > 0
+      let n = n/10
+      let d += 1
+    endwhile
+    return d
+  endif
+endfunction
 
 

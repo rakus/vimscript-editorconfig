@@ -8,6 +8,7 @@
 let s:tst_count = 0
 let s:tst_fail = 0
 let testResult = []
+let b:editorconfig_msgs = []
 
 function s:testG2Re(glob, matchList, noMatchList)
   let s:tst_count += 1
