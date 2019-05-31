@@ -12,7 +12,7 @@ function! s:run_test(name, spec)
   let g:ecTestResult = ""
   let g:ecTestResultDict = {}
   let g:editorconfig_info = []
-  call editorconfig#ClearCache()
+  call editorconfig_g2re#ClearCache()
 
   if has_key(a:spec, "ec_file")
     let g:editorconfig_file = a:spec.ec_file

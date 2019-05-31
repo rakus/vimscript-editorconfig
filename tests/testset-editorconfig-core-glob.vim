@@ -233,7 +233,10 @@ call New_ec_test("braces_numeric_range4", "braces.in", "60", '^number=true[ \t\n
 call New_ec_test("braces_numeric_range5", "braces.in", "5a", '^[ \t\n\r]*$')
 call New_ec_test("braces_numeric_range6", "braces.in", "120", '^number=true[ \t\n\r]*$')
 call New_ec_test("braces_numeric_range7", "braces.in", "121", '^[ \t\n\r]*$')
+
+if editorconfig_g2re#NumberMode() != "ZEROS"
 call New_ec_test("braces_numeric_range8", "braces.in", "060", '^[ \t\n\r]*$')
+endif
 
 " alphabetical brace range: letters should not be considered for ranges
 call New_ec_test("braces_alpha_range1", "braces.in", "{aardvark..antelope}", '^words=a[ \t\n\r]*$')

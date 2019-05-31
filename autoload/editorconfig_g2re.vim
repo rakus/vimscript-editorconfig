@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " glob to regex translation editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019 May 20
+" Last Change: 2019 May 31
 
 "
 " Provides editorconfig_g2re#GlobToRegEx(glob-pattern)
@@ -17,6 +17,15 @@
 
 
 let s:glob2re_cache = {}
+
+let s:NUMBER_MODE="AS_IS"
+"let s:NUMBER_MODE="ZEROS"
+"let s:NUMBER_MODE="JUSTIFIED"
+
+" To be deleted when NUMBER_MODE not needed anymore
+function editorconfig_g2re#NumberMode()
+  return s:NUMBER_MODE
+endfunction
 
 if has("win32") && !has("win32unix")
   let s:RE_FSEP='[\\/]'
@@ -35,6 +44,12 @@ lockvar s:g2rNormal s:g2rInBrackets s:g2rInBraces
 let s:NUM_RANGE = '[-+]\?\d\+\.\.[-+]\?\d\+'
 lockvar s:NUM_RANGE
 
+let s:CHARACTER_CLASS_SPECIAL = "^-]\\"
+lockvar s:CHARACTER_CLASS_SPECIAL
+
+function editorconfig_g2re#ClearCache()
+  let s:glob2re_cache = {}
+endfunction
 
 function editorconfig_g2re#GlobToRegEx(pat) abort
   if has_key(s:glob2re_cache, a:pat)
@@ -78,11 +93,12 @@ function s:GlobToRegExInt(pat,state) abort
     if c == '*'
       if idx < length && a:pat[idx] == '*'
         let re .= '.*'
+        let idx +=1
       else
         let re .= s:RE_NOT_FSEP . '*'
       endif
     elseif c == '?'
-      let re .= '.'
+      let re .= s:RE_NOT_FSEP
     elseif c == '['
       if a:state == s:g2rInBrackets
         let re .= '\['
@@ -92,13 +108,8 @@ function s:GlobToRegExInt(pat,state) abort
           " not closed OR '/' found OR ',' found and state == s:g2rInBraces
           let re .= '\['
         else
-          if a:pat[idx] == '!' || a:pat[idx] == '^'
-            let idx +=1
-            let re .= '[^'
-          else
-            let re .= '['
-          endif
-          let re .= s:unescape(a:pat, idx, wlk)
+          let re .= '['
+          let re .= s:handleCharacterClass(a:pat, idx, wlk)
           let re .= ']'
           let idx = wlk + 1
         endif
@@ -137,7 +148,7 @@ function s:GlobToRegExInt(pat,state) abort
       endif
     elseif c == '/'
       if idx < (length-2) && a:pat[idx] == '*' && a:pat[idx+1] == '*' && a:pat[idx+2] == '/'
-        let re .= s:RE_FSEP . '\(.*' . s:RE_FSEP . '\)\?'
+        let re .= s:RE_FSEP . '\%(.*' . s:RE_FSEP . '\)\?'
         let idx += 3
       else
         let re .= s:RE_FSEP
@@ -211,17 +222,37 @@ function s:getClosingBracesIndex(pat, idx) abort
 endfunction
 
 " Unescapes the part of the character array.
-function s:unescape(pat, start, end) abort
+function s:handleCharacterClass(pat, start, end) abort
   let wlk = a:start
-  let unesc = ''
+  let result = ''
+
+  if a:pat[wlk] == '!' || a:pat[wlk] == '^'
+    let wlk += 1
+    let result .= '^'
+  endif
+
   while wlk < a:end
     if a:pat[wlk] == '\'
-      let wlk += 1
+      if (wlk + 1) < a:end
+        let wlk += 1
+        if stridx(s:CHARACTER_CLASS_SPECIAL, a:pat[wlk]) >= 0
+          let result .= '\'
+        endif
+        let result .= a:pat[wlk]
+      else
+        let result .= '\\'
+      endif
+    elseif a:pat[wlk] == '-'
+      let result .= '-'
+    else
+      if stridx(s:CHARACTER_CLASS_SPECIAL, a:pat[wlk]) >= 0
+        let result .= '\'
+      endif
+      let result .= a:pat[wlk]
     endif
-    let unesc .= a:pat[wlk]
     let wlk += 1
   endwhile
-  return unesc
+  return result
 endfunction
 
 
@@ -230,9 +261,11 @@ function s:GlobRange2Re(lower, upper) abort
   "Special Handling leading zeros.
   let width = -1
   " If bash-like justified numbers are wanted, enable the following
-  "if match(a:lower, '^[-+]\?0\d') == 0 || match(a:upper, '^[-+]\?0\d') == 0
-  "  let width = max([ strlen(substitute(a:lower, "+", "", "")), strlen(substitute(a:upper, "+", "", "")) ] )
-  "endif
+  if s:NUMBER_MODE == "JUSTIFIED"
+    if match(a:lower, '^[-+]\?0\d') == 0 || match(a:upper, '^[-+]\?0\d') == 0
+      let width = max([ strlen(substitute(a:lower, "+", "", "")), strlen(substitute(a:upper, "+", "", "")) ] )
+    endif
+  endif
 
   let low_num = str2nr(a:lower, 10)
   let up_num = str2nr(a:upper, 10)
@@ -241,10 +274,18 @@ function s:GlobRange2Re(lower, upper) abort
   let end = max([low_num, up_num])
   let neg=''
   if start < 0
-    let new_start = end < 0 ? -end : 0
+    if s:NUMBER_MODE != "JUSTIFIED"
+      let new_start = end < 0 ? -end : 0
+    else
+      let new_start = end < 0 ? -end : 1
+    endif
     let new_end = start * -1
-    let neg = s:num_re(width, new_start, new_end, '')
-    let neg =  '-\%(' . neg . '\)'
+    let neg = s:num_re(width-1, new_start, new_end, '')
+    if s:NUMBER_MODE == "ZEROS"
+      let neg =  '-0*\%(' . neg . '\)'
+    else
+      let neg =  '-\%(' . neg . '\)'
+    endif
     if end < 0
       return '\%(' . neg . '\)'
     else
@@ -254,7 +295,13 @@ function s:GlobRange2Re(lower, upper) abort
   endif
   let pos = s:num_re(width, start, end, '')
 
-  return '\%(' . neg . '+\?\%(' . pos . '\)\)'
+  if s:NUMBER_MODE == "JUSTIFIED"
+    return '\%(' . neg . pos . '\)'
+  elseif s:NUMBER_MODE == "ZEROS"
+    return '\%(' . neg . '+\?0*\%(' . pos . '\)\)'
+  else
+    return '\%(' . neg . '+\?\%(' . pos . '\)\)'
+  endif
 
 endfunction
 
@@ -264,11 +311,7 @@ function s:num_re(a_width, min, max, suffix)
   let width10s = a:a_width > 0 ? a:a_width - 1 : 0
 
   if a:min == a:max
-    if a:min == 0 && width < 1
-      return a:suffix
-    else
       return printf("%0*d%s", width, a:min, a:suffix)
-    endif
   endif
   if a:min/10 == a:max/10
     if a:min >= 10 || width10s > 0
@@ -280,9 +323,21 @@ function s:num_re(a_width, min, max, suffix)
 
   let re = ""
 
+  " Short cut for justified 0-99*
+  if a:min == 0 && width >= s:digits(a:max) && s:digits(a:max) < s:digits(a:max+1)
+    while width > s:digits(a:max)
+      let re .= '0'
+      let width -= 1
+    endwhile
+    for i in range(width)
+      let re .= "[0-9]"
+    endfor
+    return re
+  endif
+
   " if min is not divisible by 10, create re to match the gap to the next
   " number divisable by 10
-  if a:min%10 != 0
+  if a:min == 0 || a:min%10 != 0
     let new_min = (a:min/10+1)*10
     let re .= s:num_re(width, a:min, new_min-1, a:suffix)
   else
@@ -299,7 +354,7 @@ function s:num_re(a_width, min, max, suffix)
     if re != ""
       let re .= "\\|"
     endif
-    let re .= s:num_re(width-s:digits(new_min), new_min/div, (next_min-1)/div, new_suffix)
+    let re .= s:num_re(width-s:digits(new_min)+1, new_min/div, (next_min-1)/div, new_suffix)
     let new_min = next_min
     let new_suffix .= "[0-9]"
   endwhile
@@ -323,7 +378,7 @@ function s:num_re(a_width, min, max, suffix)
       if re != ""
         let re .= "\\|"
       endif
-      let re .= s:num_re(width-s:digits(new_min), new_min/div, (new_max-1)/div, new_suffix)
+      let re .= s:num_re(width-s:digits(new_min)+1, new_min/div, (new_max-1)/div, new_suffix)
     endif
     let new_min = new_max
     let div = div/10
@@ -338,7 +393,7 @@ function s:num_re(a_width, min, max, suffix)
     if re != ""
       let re .= "\\|"
     endif
-    let re .= printf("%d", a:max)
+    let re .= printf("%0*d", width, a:max)
     " else: The number ended with '9'/'99'/'999'... and was handled in the loop above
   endif
 

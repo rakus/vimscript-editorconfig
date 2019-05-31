@@ -141,51 +141,62 @@ call s:addTest('number-range-simple-85', { 'file': 'number_85.num', 'expect': { 
 " call s:addTest('number-range-simple-x085', { 'file': 'number_000000000000000000085.num', 'expect': { '&tabstop': 26 }})
 
 "testing negative number-ranges
-call s:addTest('negative-number-range-simple-0' , { 'file': 'neg_number_-0.num', 'expect': { '&tabstop': 27 }})
+if editorconfig_g2re#NumberMode() != "JUSTIFIED"
+  call s:addTest('negative-number-range-simple-0' , { 'file': 'neg_number_-0.num', 'expect': { '&tabstop': 27 }})
+endif
 call s:addTest('negative-number-range-simple-1' , { 'file': 'neg_number_-1.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('negative-number-range-simple-85', { 'file': 'neg_number_-85.num', 'expect': { '&tabstop': 27 }})
 
 " Leading zeros not supported by editorconfig
 " see https://github.com/editorconfig/editorconfig/issues/371
-" call s:addTest('negative-number-range-simple-00' , { 'file': 'neg_number_-00.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('negative-number-range-simple-01' , { 'file': 'neg_number_-01.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('negative-number-range-simple-085', { 'file': 'neg_number_-085.num', 'expect': { '&tabstop': 27 }})
-"
-" call s:addTest('negative-number-range-simple-000' , { 'file': 'neg_number_-000.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('negative-number-range-simple-001' , { 'file': 'neg_number_-001.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('negative-number-range-simple-0085', { 'file': 'neg_number_-0085.num', 'expect': { '&tabstop': 27 }})
-"
-" call s:addTest('negative-number-range-simple-x00' , { 'file': 'neg_number_-000000000000000000000.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('negative-number-range-simple-x01' , { 'file': 'neg_number_-000000000000000000001.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('negative-number-range-simple-x085', { 'file': 'neg_number_-000000000000000000085.num', 'expect': { '&tabstop': 27 }})
+if editorconfig_g2re#NumberMode() == "ZEROS"
+  call s:addTest('negative-number-range-simple-00' , { 'file': 'neg_number_-00.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('negative-number-range-simple-01' , { 'file': 'neg_number_-01.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('negative-number-range-simple-085', { 'file': 'neg_number_-085.num', 'expect': { '&tabstop': 27 }})
+
+  call s:addTest('negative-number-range-simple-000' , { 'file': 'neg_number_-000.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('negative-number-range-simple-001' , { 'file': 'neg_number_-001.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('negative-number-range-simple-0085', { 'file': 'neg_number_-0085.num', 'expect': { '&tabstop': 27 }})
+
+  call s:addTest('negative-number-range-simple-x00' , { 'file': 'neg_number_-000000000000000000000.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('negative-number-range-simple-x01' , { 'file': 'neg_number_-000000000000000000001.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('negative-number-range-simple-x085', { 'file': 'neg_number_-000000000000000000085.num', 'expect': { '&tabstop': 27 }})
+endif
 
 "testing negative-positive number-ranges
 call s:addTest('neg-pos-number-range-simple--85', { 'file': 'both_number_-85.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('neg-pos-number-range-simple--1' , { 'file': 'both_number_-1.num', 'expect': { '&tabstop': 27 }})
-call s:addTest('neg-pos-number-range-simple--0' , { 'file': 'both_number_-0.num', 'expect': { '&tabstop': 27 }})
-call s:addTest('neg-pos-number-range-simple-+0' , { 'file': 'both_number_+0.num', 'expect': { '&tabstop': 27 }})
-call s:addTest('neg-pos-number-range-simple-+1' , { 'file': 'both_number_+1.num', 'expect': { '&tabstop': 27 }})
-call s:addTest('neg-pos-number-range-simple-+85', { 'file': 'both_number_+85.num', 'expect': { '&tabstop': 27 }})
+
+if editorconfig_g2re#NumberMode() != "JUSTIFIED"
+  call s:addTest('neg-pos-number-range-simple--0' , { 'file': 'both_number_-0.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-+0' , { 'file': 'both_number_+0.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-+1' , { 'file': 'both_number_+1.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-+85', { 'file': 'both_number_+85.num', 'expect': { '&tabstop': 27 }})
+endif
 call s:addTest('neg-pos-number-range-simple-0' , { 'file': 'both_number_0.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('neg-pos-number-range-simple-1' , { 'file': 'both_number_1.num', 'expect': { '&tabstop': 27 }})
 call s:addTest('neg-pos-number-range-simple-85', { 'file': 'both_number_85.num', 'expect': { '&tabstop': 27 }})
 
 " Leading zeros not supported by editorconfig
 " see https://github.com/editorconfig/editorconfig/issues/371
-" call s:addTest('neg-pos-number-range-simple-0085', { 'file': 'both_number_-0085.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('neg-pos-number-range-simple-001' , { 'file': 'both_number_-001.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('neg-pos-number-range-simple-000' , { 'file': 'both_number_-000.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('neg-pos-number-range-simple-000' , { 'file': 'both_number_+000.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('neg-pos-number-range-simple-001' , { 'file': 'both_number_+001.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('neg-pos-number-range-simple-0085', { 'file': 'both_number_+0085.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('neg-pos-number-range-simple-000' , { 'file': 'both_number_000.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('neg-pos-number-range-simple-001' , { 'file': 'both_number_001.num', 'expect': { '&tabstop': 27 }})
-" call s:addTest('neg-pos-number-range-simple-0085', { 'file': 'both_number_0085.num', 'expect': { '&tabstop': 27 }})
+if editorconfig_g2re#NumberMode() == "ZEROS"
+  call s:addTest('neg-pos-number-range-simple--0085', { 'file': 'both_number_-0085.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple--001' , { 'file': 'both_number_-001.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple--000' , { 'file': 'both_number_-000.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-+000' , { 'file': 'both_number_+000.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-+001' , { 'file': 'both_number_+001.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-+0085', { 'file': 'both_number_+0085.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-000' , { 'file': 'both_number_000.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-001' , { 'file': 'both_number_001.num', 'expect': { '&tabstop': 27 }})
+  call s:addTest('neg-pos-number-range-simple-0085', { 'file': 'both_number_0085.num', 'expect': { '&tabstop': 27 }})
+endif
 
 "testing number-ranges not octl
-call s:addTest('number-range-no-octal1', { 'file': 'oct_number_10.num', 'expect': { '&tabstop': 28 }})
-call s:addTest('number-range-no-octal2', { 'file': 'oct_number_20.num', 'expect': { '&tabstop': 28 }})
-call s:addTest('number-range-no-octal3', { 'file': 'oct_number_8.num', 'expect': { '&tabstop==28': 0 }})
+if editorconfig_g2re#NumberMode() != "JUSTIFIED"
+  call s:addTest('number-range-no-octal1', { 'file': 'oct_number_10.num', 'expect': { '&tabstop': 28 }})
+  call s:addTest('number-range-no-octal2', { 'file': 'oct_number_20.num', 'expect': { '&tabstop': 28 }})
+  call s:addTest('number-range-no-octal3', { 'file': 'oct_number_8.num', 'expect': { '&tabstop==28': 0 }})
+endif
 
 execute "cd " . s:TEST_FILE_DIR
 if 0 != RunTestSet("vim-extensions", s:test_desc)

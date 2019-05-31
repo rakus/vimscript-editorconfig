@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " autoload script of editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019-05-14T05:52:20+0200
+" Last Change: 2019 May 31
 
 " The core plugin.
 " For documentation see ../doc/editorconfig.vim
@@ -19,13 +19,6 @@ let s:enc_names = [ 'latin1' , 'iso-8859-n' , 'koi8-r' , 'koi8-u' , 'macroman' ,
       \ 'utf-16be' ]
 
 let s:enc_re = [ '^8bit-\S\+$', '^cp\d\+$', '^2byte-\S\+$' ]
-
-" cache to store glob to regex translations
-let s:glob2re_cache = {}
-
-function editorconfig#ClearCache()
-  let s:glob2re_cache = {}
-endfunction
 
 " Function to trim trailing whitespaces before saving the file.
 " Called via autocmd, see SetTrimTrailingWhitespaces below.
