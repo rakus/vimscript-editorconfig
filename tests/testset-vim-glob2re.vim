@@ -47,6 +47,11 @@ function s:glob_test(glob, regex)
     let expect = '/' . a:regex
   endif
 
+  if has("win32") && !has("win32unix")
+    let expect = substitute(expect, '\[^/\]', '[^\\\\/]', 'g')
+    let expect = substitute(expect, '\zs/\ze[^\]]', '[\\\\/]', 'g')
+  endif
+
   let re = editorconfig_g2re#GlobToRegEx(a:glob)
 
   if re != expect
