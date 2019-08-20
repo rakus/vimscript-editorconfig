@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " glob to regex translation editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019 May 31
+" Last Change: 2019 Aug 20
 
 "
 " Provides editorconfig_g2re#GlobToRegEx(glob-pattern)
@@ -128,6 +128,7 @@ function s:GlobToRegExInt(pat,state) abort
               let bounds = eval(substitute(num_range, '^\([-+]\?\d\+\)\.\.\([-+]\?\d\+\)$', "[ '\\1', '\\2' ]", ''))
               let re .= s:GlobRange2Re(bounds[0], bounds[1])
             else
+              call editorconfig#Warning("Brace without comma. Escape it, to silence this warning: " . join(a:pat, ''))
               let inner = s:GlobToRegExInt(a:pat[idx:(wlk-1)], s:g2rNormal)
               let re .= '{' . inner . '}'
             endif
@@ -177,6 +178,7 @@ function s:getClosingBracketIndex(pat, idx, state) abort
   let wlk = a:idx
   while wlk < len && a:pat[wlk] != ']'
     if a:pat[wlk] == '/'
+      call editorconfig#Warning("Slash found while searching for closing square bracket. Remove slash or escape square bracket, to silence this warning: " . join(a:pat, ''))
       return -1
     elseif a:pat[wlk] == ',' && a:state == s:g2rInBraces
       return -1
@@ -187,7 +189,12 @@ function s:getClosingBracketIndex(pat, idx, state) abort
     let wlk +=1
   endwhile
 
-  return wlk >= len? -1 : wlk
+  if wlk >= len
+    call editorconfig#Warning("Unclosed square bracket found. Escape it, to silence this warning: " . join(a:pat, ''))
+    return -1
+  else
+    return wlk
+  endif
 endfunction
 
 " Searches for a closing '}' and returns a array with its index and whether a
@@ -216,6 +223,7 @@ function s:getClosingBracesIndex(pat, idx) abort
   endwhile
 
   if wlk >= len
+    call editorconfig#Warning("Unclosed brace found. Escape it, to silence this warning: " . join(a:pat, ''))
     let wlk = -1
   endif
   return [ wlk, has_comma ]
