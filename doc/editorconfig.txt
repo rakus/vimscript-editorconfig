@@ -1,4 +1,4 @@
-*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 May 16
+*editorconfig.txt*  For Vim version 8.1.  Last change: 2019 Aug 23
 
                   EDITOR CONFIG FOR VIM   by Ralf Schandl
 
@@ -274,6 +274,12 @@ might change!
                         after the editorconfig properties were applied to the
                         buffer.
 
+`EditorConfigOnLoad()`    If a function with this name exists, it is called
+                        after the initial configuration of the editorconfig
+			plugin. This function could be used to register
+			listeners (which is not possible before).
+			See |editorconfig-integrating|.
+
 
 ==============================================================================
 5. Extending Editorconfig                             *editorconfig-extending*
@@ -371,8 +377,9 @@ Example:
 The function `EditorConfigDebug` is called whenever the editorconfig plugin
 applies a property.
 
-BTW: If you add the above code to your `vimrc` you might need to add
-`packloadall` before registering the listener.
+BTW: If you add the above code to your `vimrc` you either need to add
+`packloadall` before registering the listener or do it from a function called
+`EditorConfigOnLoad` (see section |editorconfig-customization|).
 
 Example Output:
 ---------------

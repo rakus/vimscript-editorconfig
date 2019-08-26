@@ -208,3 +208,8 @@ function editorconfig_start#Apply(force) abort
     echo "EditorConfig NOT applied - unknown reason: " . rc
   endif
 endfunction
+
+
+if exists("*EditorConfigOnLoad")
+  call EditorConfigOnLoad()
+endif
