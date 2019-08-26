@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " glob to regex translation editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019 Aug 20
+" Last Change: 2019 Aug 22
 
 "
 " Provides editorconfig_g2re#GlobToRegEx(glob-pattern)
@@ -73,9 +73,9 @@ function editorconfig_g2re#GlobToRegEx(pat) abort
   try
     call match("", re)
     let  s:glob2re_cache[a:pat] = re
-    call editorconfig#Debug("Glob2RE: %s -> %s", a:pat, re)
+    call editorconfig#Debug(1, "Glob2RE: %s -> %s", a:pat, re)
   catch /.*/
-    call editorconfig#Debug("Invalid regex: %s -> %s Exception: %s", a:pat, re, v:exception)
+    call editorconfig#Debug(1, "Invalid regex: %s -> %s Exception: %s", a:pat, re, v:exception)
     throw "Invalid Glob: Can't translate glob pattern: " . a:pat . " Exception: " . v:exception
   endtry
   return re

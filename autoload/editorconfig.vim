@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " autoload script of editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019 May 31
+" Last Change: 2019 Aug 23
 
 " The core plugin.
 " For documentation see ../doc/editorconfig.vim
@@ -228,13 +228,18 @@ function! editorconfig#Error(msg) abort
   call add(b:editorconfig_msgs, "ERROR: " . a:msg)
 endfunction
 " Add msg to info list, if debug enabled
-function! editorconfig#Debug(msg, ...) abort
-  if get(g:, 'editorconfig_debug', 0) > 0
+function! editorconfig#Debug(level, msg, ...) abort
+  if get(g:, 'editorconfig_debug', 0) >= a:level
     " Debug might be called before buffer local vars are created.
     if !exists("b:editorconfig_msgs")
       let b:editorconfig_msgs = []
     endif
-    call add(b:editorconfig_msgs, "DEBUG: " . call('printf', [a:msg] +  a:000))
+    if a:level > 1
+      let prefix = "DEBUG-" . a:level
+    else
+      let prefix = "DEBUG"
+    endif
+    call add(b:editorconfig_msgs, prefix . ": " . call('printf', [a:msg] +  a:000))
   endif
 endfunction
 
@@ -362,15 +367,11 @@ function! s:ApplyEditorConfig(filename, ec_list) abort
   for ec in a:ec_list
     let fcfg = ec.fcfg
     for c in fcfg
-        if get(g:, "editorconfig_debug", 0) >= 3
-          call editorconfig#Debug('match Filename: %s -> %s', a:filename, c[0])
-        endif
+      call editorconfig#Debug(2, 'match Filename: %s -> %s', a:filename, c[0])
 
       if match(a:filename, c[0]) >=0
-        call editorconfig#Debug('Applying from %s [%s]', ec['.ec_file'], c[1]['.ec_glob'])
-        if get(g:, "editorconfig_debug", 0) >= 3
-          call editorconfig#Debug('Properties: %s', string(c[1]))
-        endif
+        call editorconfig#Debug(1, 'Applying from %s [%s]', ec['.ec_file'], c[1]['.ec_glob'])
+        call editorconfig#Debug(2, 'Properties: %s', string(c[1]))
 
         " context used for error/warning
         let ctx = { 'file': ec['.ec_file'], 'section': c[1]['.ec_glob'] }
@@ -433,7 +434,7 @@ function! s:ApplyEditorConfig(filename, ec_list) abort
     " indent_size (=shiftwidth) is set, but tab_width is not set.
     " -> Set tab_width to indent_size
     " -> VIM: tabstop to shiftwidth
-    call editorconfig#Debug("Adjusting tab_width to indent_size")
+    call editorconfig#Debug(1, "Adjusting tab_width to indent_size")
     let &l:tabstop = &l:shiftwidth
   elseif has_key(cmds, 'tab_width') && !has_key(cmds, 'indent_size')
     " tab_width is set, but indent_size is not

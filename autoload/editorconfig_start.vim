@@ -1,7 +1,7 @@
 " editorconfig.vim: (global plugin) editorconfig support for Vim
 " autoload script of editorconfig plugin, see ../plugin/editorconfig.vim
 " Version:     0.1
-" Last Change: 2019-05-03T10:49:56+0200
+" Last Change: 2019 Aug 23
 
 " The core plugin.
 " For documentation see ../doc/editorconfig.vim
@@ -62,6 +62,16 @@ else
   let s:DEL_DOTS_RE = '[^/]\+/\.\.\+\(/\|$\)'
 endif
 
+"
+" Proxy for editorconfig#Debug to prevent loading of editorconfig.vim,
+" if g:editorconfig_debug is not set to the appropriate level.
+"
+function! s:Debug(level, msg, ...) abort
+  if get(g:, 'editorconfig_debug', 0) >= a:level
+    call call("editorconfig#Debug", [ a:level, a:msg ] + a:000)
+  endif
+endfunction
+
 " Create absolut file name and base-dir to search for .editorconfig files.
 " Simple for existing files and non existing files in existing directories.
 " More complex for files in none existing directories. This is a real corner
@@ -121,9 +131,9 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
       let file_dir = substitute(file_dir, '\\', '/', 'g')
   endif
   if get(g:, "editorconfig_debug", 0) >= 3
-    call editorconfig#Debug('Expanded Filename: "%s" -> "%s"', expand('%'), filename)
-    call editorconfig#Debug('Basedir: "%s"', file_dir)
-    call editorconfig#Debug('Filetype: %s', &filetype)
+    call s:Debug(3, 'Expanded Filename: "%s" -> "%s"', expand('%'), filename)
+    call s:Debug(3, 'Basedir: "%s"', file_dir)
+    call s:Debug(3, 'Filetype: %s', &filetype)
   endif
 
   " project base dirs
@@ -137,7 +147,7 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
       endif
     endfor
     if found == 0
-      call editorconfig#Debug('Skipped - not in a allowed base dir')
+      call s:Debug(1, 'Skipped - not in a allowed base dir')
       return
     endif
     unlet found
@@ -148,7 +158,7 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
     if !empty(&filetype)
       for ft in get(g:, "editorconfig_blacklist_filetype", [])
         if &filetype =~?  glob2regpat(ft)
-          call editorconfig#Debug('Skipped - blacklisted filetype: %s', ft)
+          call s:Debug(1, 'Skipped - blacklisted filetype: %s', ft)
           return 2
         endif
       endfor
@@ -158,7 +168,7 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
         let glob = '*/' . glob
       endif
       if filename =~?  glob2regpat(glob)
-        call editorconfig#Debug('Skipped - blacklisted file name pattern: %s', glob)
+          call s:Debug(1, 'Skipped - blacklisted file name pattern: %s', glob)
         return 3
       endif
     endfor
@@ -168,10 +178,10 @@ function! editorconfig_start#CheckAndHandleEditorConfig(force) abort
   let ec_files = filter(ec_files, {i, v -> filereadable(v)})
   if empty(ec_files)
     " no .editorconfig files found - nothing to do
-    call editorconfig#Debug('No editorconfig files (%s) found', editorconfig_file)
+    call s:Debug(1, 'No editorconfig files (%s) found', editorconfig_file)
     return 1
   endif
-  call editorconfig#Debug('EditorConfig files: %s', ec_files)
+  call s:Debug(1, 'EditorConfig files: %s', ec_files)
 
   if ! exists('b:editorconfig_running')
     try

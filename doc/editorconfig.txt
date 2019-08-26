@@ -327,11 +327,12 @@ command.
 `editorconfig#Warning(msg)`
                       Adds the given message as warning messages.
 
-`editorconfig#Debug(msg, ...)`
-                      If `g:editorconfig_debug` is set, adds the given
+`editorconfig#Debug(level, msg, ...)`
+                      If `g:editorconfig_debug` is set to a value
+		      greater-equal to `level`, adds the given
                       formatted message to the list as info message. This is
                       to be used like |printf()|. Example:
-                      `editorconfig#Debug("Hello %s", "world")`
+                      `editorconfig#Debug(1, "Hello %s", "world")`
 
 BTW: The function |EditorConfigPre| and |EditorConfigPost| might also be
 useful when the editorconfig plugin is extended.
